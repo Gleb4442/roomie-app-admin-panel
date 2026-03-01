@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Roomie Guest - Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#ffffff",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "serif": ["Playfair Display", "serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+            min-height: max(884px, 100dvh);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-slate-50 dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex justify-center">
+<div class="w-full max-w-[430px] bg-background-light dark:bg-background-dark min-h-screen relative overflow-hidden shadow-2xl flex flex-col">
+<div class="h-12 w-full flex items-center justify-between px-8 pt-4 bg-background-light dark:bg-background-dark z-10">
+<span class="text-xs font-semibold">9:41</span>
+<div class="flex gap-1 items-center">
+<span class="material-icons text-xs">signal_cellular_alt</span>
+<span class="material-icons text-xs">wifi</span>
+<span class="material-icons text-xs">battery_full</span>
+</div>
+</div>
+<header class="px-6 py-6 bg-background-light dark:bg-background-dark">
+<h1 class="text-3xl font-serif font-semibold tracking-tight text-slate-900 dark:text-white">Profile</h1>
+</header>
+<main class="flex-1 flex flex-col px-6 overflow-y-auto pb-32">
+<div class="flex flex-col items-center justify-center mt-4 mb-10">
+<div class="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-6 shadow-sm border border-slate-50 dark:border-slate-700">
+<span class="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-600">person</span>
+</div>
+<p class="text-center text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-[260px] mb-8">
+                    Sign in to access your bookings, rewards, and room controls.
+                </p>
+<button class="w-full bg-primary text-white font-medium py-3.5 rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all mb-4">
+                    Login / Sign Up
+                </button>
+<a class="text-primary text-sm font-medium hover:underline py-2" href="#">
+                    Help Center
+                </a>
+</div>
+<div class="space-y-1">
+<button class="w-full flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">language</span>
+</div>
+<span class="text-base font-medium text-slate-700 dark:text-slate-200">Language</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-slate-400 font-medium">English (US)</span>
+<span class="material-symbols-outlined text-slate-300 text-[20px]">chevron_right</span>
+</div>
+</button>
+<button class="w-full flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">attach_money</span>
+</div>
+<span class="text-base font-medium text-slate-700 dark:text-slate-200">Currency</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-slate-400 font-medium">USD</span>
+<span class="material-symbols-outlined text-slate-300 text-[20px]">chevron_right</span>
+</div>
+</button>
+<button class="w-full flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</div>
+<span class="text-base font-medium text-slate-700 dark:text-slate-200">About Roomie</span>
+</div>
+<span class="material-symbols-outlined text-slate-300 text-[20px]">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</div>
+<span class="text-base font-medium text-slate-700 dark:text-slate-200">App Settings</span>
+</div>
+<span class="material-symbols-outlined text-slate-300 text-[20px]">chevron_right</span>
+</button>
+</div>
+<div class="mt-8 text-center">
+<p class="text-[10px] text-slate-300 dark:text-slate-600">Version 2.4.0</p>
+</div>
+</main>
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[390px] z-50">
+<nav class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-slate-700/30 rounded-full shadow-lg shadow-slate-200/50 dark:shadow-black/50 px-6 py-4 flex justify-between items-center">
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-[24px] group-hover:scale-110 transition-transform duration-200">home</span>
+<span class="text-[9px] font-medium tracking-wide">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-primary transition-colors group" href="#">
+<span class="material-icons text-[22px] group-hover:scale-110 transition-transform duration-200">support_agent</span>
+<span class="text-[9px] font-medium tracking-wide">Services</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-primary transition-colors group" href="#">
+<span class="material-icons text-[22px] group-hover:scale-110 transition-transform duration-200">receipt_long</span>
+<span class="text-[9px] font-medium tracking-wide">Orders</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary transition-colors group relative" href="#">
+<span class="material-icons text-[24px] group-hover:scale-110 transition-transform duration-200">person</span>
+<span class="text-[9px] font-medium tracking-wide">Profile</span>
+<span class="absolute -bottom-2 w-1 h-1 rounded-full bg-primary opacity-80"></span>
+</a>
+</nav>
+</div>
+<div class="fixed bottom-1 left-1/2 -translate-x-1/2 w-32 h-1 bg-slate-200 dark:bg-slate-800 rounded-full z-40"></div>
+</div>
+</body></html>

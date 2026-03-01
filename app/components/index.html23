@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Roomie Guest - Order Confirmed</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1052d5",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"],
+                        "serif": ["Playfair Display", "serif"],
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-display antialiased selection:bg-primary/20">
+<!-- Header / Top Bar -->
+<header class="flex items-center justify-between p-6">
+<button aria-label="Close" class="flex size-10 shrink-0 items-center justify-center rounded-full text-slate-900 dark:text-slate-100 transition-colors hover:bg-black/5 dark:hover:bg-white/10">
+<span class="material-symbols-outlined text-2xl font-light">close</span>
+</button>
+<div class="flex-1"></div> <!-- Spacer for visual balance if title isn't centered perfectly or needed -->
+</header>
+<!-- Main Content Area -->
+<main class="flex flex-1 flex-col items-center justify-center px-6 pb-12 pt-4 text-center">
+<!-- Success Animation/Icon Container -->
+<div class="relative mb-10 flex size-32 items-center justify-center">
+<!-- Glowing background/Liquid glass effect -->
+<div class="absolute inset-0 rounded-full bg-emerald-500/20 blur-xl"></div>
+<div class="absolute inset-0 rounded-full bg-gradient-to-tr from-emerald-100/50 to-white/60 dark:from-emerald-900/40 dark:to-white/5 backdrop-blur-sm shadow-[inset_0_0_20px_rgba(255,255,255,0.5)] border border-white/40 dark:border-white/10"></div>
+<!-- Checkmark Icon -->
+<span class="material-symbols-outlined relative z-10 text-[4rem] text-emerald-600 dark:text-emerald-400 drop-shadow-sm" style="font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 48;">
+                check
+            </span>
+</div>
+<!-- Text Content -->
+<div class="mb-12 max-w-xs space-y-4">
+<h1 class="font-serif text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+                Order Confirmed
+            </h1>
+<p class="text-base font-normal leading-relaxed text-slate-600 dark:text-slate-400">
+                Your gourmet meal is being prepared. Estimated delivery: <span class="font-semibold text-slate-900 dark:text-slate-200">25 mins</span>.
+            </p>
+</div>
+<!-- Order Summary Card (Optional visual enhancement for context) -->
+<div class="mb-auto w-full max-w-[320px] rounded-xl bg-white p-4 shadow-sm dark:bg-slate-800/50">
+<div class="flex items-center gap-4">
+<div class="size-16 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700">
+<div class="h-full w-full bg-cover bg-center" data-alt="Gourmet healthy salad bowl dish" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA9PBCeZ7I5P6Z5R35ll2wMBYvYhHaiIdlnDTbxIYEHKAI6ZxL8RKCMKBek1Y_bKWVtx8ag-Fce5AdFhS3NEBwJbIxPRFCaix3xgK0xZZ5JzRZZp-IlC8GsiCdmL5f2731tqUm7M55CyPTAr6VaQV48bbz4JJZrr7ltdEUl37f8uD5Ysv72XgUAAl1UtC4VE-t29hpGYnWn1TkWjfZZnoB1Jpocq_9-v2CO8p1mITok_Ks8qHjC-Nf1v3GSd1zsqQE_dL09RaJMccrf');"></div>
+</div>
+<div class="flex flex-1 flex-col items-start gap-1">
+<p class="text-sm font-bold text-slate-900 dark:text-slate-100">Roasted Salmon Bowl</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Room 402 • 1 Item</p>
+</div>
+<div class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                    Paid
+                </div>
+</div>
+</div>
+</main>
+<!-- Bottom Actions -->
+<footer class="w-full px-6 pb-8 pt-4">
+<div class="mx-auto flex w-full max-w-md flex-col gap-4">
+<!-- Primary Action -->
+<button class="group relative flex h-14 w-full items-center justify-center overflow-hidden rounded-full bg-primary text-white transition-all hover:bg-blue-700 active:scale-[0.98] shadow-lg shadow-blue-900/20">
+<span class="relative z-10 text-base font-bold tracking-wide">Track Order</span>
+</button>
+<!-- Secondary Action -->
+<button class="flex h-14 w-full items-center justify-center rounded-full border border-slate-200 bg-transparent text-slate-900 transition-colors hover:bg-slate-50 active:scale-[0.98] dark:border-slate-700 dark:text-white dark:hover:bg-white/5">
+<span class="text-base font-bold tracking-wide">Back to Menu</span>
+</button>
+</div>
+</footer>
+</body></html>

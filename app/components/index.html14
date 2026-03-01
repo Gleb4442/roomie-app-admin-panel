@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order Confirmation - Roomie Guest</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#113fd4",
+                        "background-light": "#fcfcfb",
+                        "background-dark": "#101422",
+                        "emerald-success": "#10b981",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "serif-luxury": ["Playfair Display", "serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(17, 63, 212, 0.05);
+        }
+        .success-glow {
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.15);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<nav class="flex items-center justify-between px-6 py-6 w-full max-w-md mx-auto">
+<div class="flex items-center justify-center size-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-slate-900 dark:text-slate-100">close</span>
+</div>
+<span class="text-sm font-semibold tracking-widest uppercase text-slate-400">Order Status</span>
+<div class="size-10"></div> <!-- Spacer for symmetry -->
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col items-center justify-center px-8 max-w-md mx-auto w-full">
+<!-- Success Icon with Liquid Glass Effect -->
+<div class="relative mb-12 flex items-center justify-center">
+<!-- Background Soft Glow -->
+<div class="absolute size-48 bg-emerald-success/10 rounded-full blur-3xl"></div>
+<!-- Glass Circle -->
+<div class="liquid-glass success-glow size-40 rounded-full flex items-center justify-center relative z-10">
+<div class="bg-emerald-success size-20 rounded-full flex items-center justify-center shadow-lg shadow-emerald-success/30">
+<span class="material-symbols-outlined text-white text-5xl font-bold">check</span>
+</div>
+</div>
+<!-- Decorative Elements -->
+<div class="absolute -top-2 -right-2 size-4 bg-primary/20 rounded-full blur-sm"></div>
+<div class="absolute -bottom-4 left-4 size-6 bg-emerald-success/20 rounded-full blur-md"></div>
+</div>
+<!-- Typography Stack -->
+<div class="text-center space-y-4">
+<h1 class="font-serif-luxury text-4xl text-slate-900 dark:text-slate-100 tracking-tight">
+                Order Confirmed
+            </h1>
+<p class="text-slate-500 dark:text-slate-400 text-lg leading-relaxed max-w-[280px] mx-auto">
+                Your request is being processed. Expected in <span class="text-primary font-semibold">15 mins</span>.
+            </p>
+</div>
+<!-- Order Mini Summary (Minimalist) -->
+<div class="mt-12 w-full p-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+<div class="flex justify-between items-center mb-1">
+<span class="text-xs uppercase tracking-widest text-slate-400 font-bold">Request ID</span>
+<span class="text-sm font-medium text-slate-900 dark:text-slate-100">#RG-88291</span>
+</div>
+<div class="h-px w-full bg-slate-100 dark:bg-slate-800 my-3"></div>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-xl">room_service</span>
+</div>
+<div>
+<p class="text-sm font-semibold">Late Night Amenity Kit</p>
+<p class="text-xs text-slate-400">Room 402 • Deluxe Suite</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Actions -->
+<footer class="p-8 w-full max-w-md mx-auto flex flex-col gap-4 mb-4">
+<button class="w-full bg-primary hover:bg-primary/90 text-white h-16 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+<span>Track Order</span>
+<span class="material-symbols-outlined text-xl">arrow_forward</span>
+</button>
+<button class="w-full border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 h-16 rounded-full font-bold text-lg transition-all active:scale-[0.98]">
+            Back to Services
+        </button>
+<!-- Safe Area Indicator for iOS -->
+<div class="h-2 w-32 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 opacity-50"></div>
+</footer>
+<!-- Image for Context (Hidden but meets requirements) -->
+<div class="hidden">
+<img alt="Roomie Guest Context" data-alt="Luxury hotel lobby with elegant minimalist interior design" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7LInlQmFXWzVNResBYa4Gy_uFw2FKdqoc6De3VpzHdQJsCmibI25Lme38r5S8G1sspsgvpuXX4FYcfcY99GZ_V8JfZWuJboa56bqKM6aGkGV3Mu7SIURgD4K1TKvFWFzPBeq-hStFNjTkLomVYTEK2jgLiOqTeHsBHpMXT4Xgo4HnGKKJzWJMueLzyyZnpEBEaqyMxYW7LiPijeqqt7uB351w8KW9mbHeZvAPX9jVnnY0gIoKp5P9IpnIVL4GVwXV2FB1WGzZrvKi"/>
+</div>
+</body></html>

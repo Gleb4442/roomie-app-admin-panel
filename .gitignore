@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+
+# Environment files — НИКОГДА не коммитить
+.env
+.env.local
+.env.production
+.env.development
+*.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (файлы на сервере, не в репо)
+uploads/
+
+# Mobile — отдельный репо
+apps/mobile/
+
+# Prisma
+backend/prisma/migrations/dev.db

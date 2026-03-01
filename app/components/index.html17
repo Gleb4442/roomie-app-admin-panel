@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Roomie Guest - Order Tracking</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Inter:wght@300;400;500;600&amp;family=Material+Icons+Outlined&amp;family=Material+Icons&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1052D5", // Deep Royal Blue
+                        "background-light": "#FAFAFA",
+                        "background-dark": "#121212",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1E1E1E",
+                        "text-primary-light": "#111827",
+                        "text-primary-dark": "#F3F4F6",
+                        "text-secondary-light": "#6B7280",
+                        "text-secondary-dark": "#9CA3AF",
+                    },
+                    fontFamily: {
+                        display: ["'Playfair Display'", "serif"],
+                        body: ["'Inter'", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "1rem",
+                        'xl': "1.5rem",
+                        '2xl': "2rem",
+                        '3xl': "2.5rem",
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(0,0,0,0.05)',
+                        'glow': '0 0 15px rgba(16, 82, 213, 0.5)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-panel {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            animation: pulsate 2s infinite;
+            border: 2px solid #1052D5;
+            top: 0;
+            left: 0;
+            opacity: 0;
+        }
+        @keyframes pulsate {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-body min-h-screen relative pb-28 text-text-primary-light dark:text-text-primary-dark transition-colors duration-300">
+<header class="pt-8 px-6 pb-4 flex justify-between items-center sticky top-0 z-20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
+<button class="w-10 h-10 rounded-full bg-white dark:bg-surface-dark shadow-sm flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+<span class="material-icons-outlined text-xl">arrow_back</span>
+</button>
+<div class="text-center">
+<h2 class="text-xs font-semibold tracking-widest text-text-secondary-light dark:text-text-secondary-dark uppercase mb-0.5">Order Status</h2>
+<p class="font-display font-semibold text-lg">#RG-9024</p>
+</div>
+<button class="w-10 h-10 rounded-full bg-white dark:bg-surface-dark shadow-sm flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors relative">
+<span class="material-icons-outlined text-xl">notifications_none</span>
+<span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-surface-dark"></span>
+</button>
+</header>
+<main class="px-6 space-y-8 mt-2">
+<div>
+<h1 class="font-display text-4xl font-bold text-gray-900 dark:text-white leading-tight">
+                Track Your <br/><span class="text-primary">Order</span>
+</h1>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-3xl p-6 shadow-soft relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Estimated Arrival</span>
+<span class="flex items-center text-primary font-semibold text-sm bg-primary/10 px-3 py-1 rounded-full">
+<span class="material-icons-outlined text-sm mr-1">schedule</span> On Time
+                </span>
+</div>
+<div class="flex items-end gap-2">
+<span class="text-5xl font-display font-bold text-gray-900 dark:text-white">12</span>
+<span class="text-lg text-gray-500 dark:text-gray-400 mb-2 font-medium">mins</span>
+</div>
+<div class="mt-6 w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full w-2/3 shadow-glow"></div>
+</div>
+</div>
+<div class="pl-2">
+<div class="flex gap-4 pb-8 relative">
+<div class="absolute left-[15px] top-8 bottom-0 w-0.5 bg-primary/30"></div>
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
+<span class="material-icons text-sm">check</span>
+</div>
+</div>
+<div class="flex-1 pt-1">
+<h3 class="font-semibold text-gray-900 dark:text-white">Order Received</h3>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">10:42 AM</p>
+</div>
+</div>
+<div class="flex gap-4 pb-8 relative">
+<div class="absolute left-[15px] top-8 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+<div class="relative z-10 flex flex-col items-center justify-center w-8">
+<div class="w-4 h-4 bg-primary rounded-full relative">
+<div class="pulse-ring"></div>
+</div>
+</div>
+<div class="flex-1 pt-0">
+<div class="flex items-center justify-between">
+<h3 class="font-semibold text-primary text-lg">Preparing</h3>
+<span class="material-icons-outlined text-primary animate-spin">loop</span>
+</div>
+<p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-1 leading-relaxed">
+                        Our chefs are crafting your meal with care.
+                    </p>
+</div>
+</div>
+<div class="flex gap-4 pb-8 relative">
+<div class="absolute left-[15px] top-8 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-8 h-8 rounded-full bg-white dark:bg-surface-dark border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-400">
+<span class="material-icons-outlined text-sm">room_service</span>
+</div>
+</div>
+<div class="flex-1 pt-1 opacity-60">
+<h3 class="font-medium text-gray-500 dark:text-gray-400">In Transit</h3>
+</div>
+</div>
+<div class="flex gap-4 relative">
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-8 h-8 rounded-full bg-white dark:bg-surface-dark border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-400">
+<span class="material-icons-outlined text-sm">door_front</span>
+</div>
+</div>
+<div class="flex-1 pt-1 opacity-60">
+<h3 class="font-medium text-gray-500 dark:text-gray-400">Delivered</h3>
+</div>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-3xl p-6 shadow-soft mt-8">
+<h3 class="font-display font-bold text-xl mb-4 text-gray-900 dark:text-white">Order Summary</h3>
+<div class="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
+<img alt="Truffle Wagyu Burger" class="w-16 h-16 rounded-2xl object-cover shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxRNZDED81Sn3qFx7zM7eURLQ_BNA2Nfvjboq0ecD5wzl7aErDWRZjq79dxuA-ea5TVL6UHTR8A5Vb8bqhqAIgwycfr3_DtHxvt9I8ThKnV4iS3QRKAgWJNJggLKujXguv8s-6ZIPHT72DTm0WJ4uWNR1PUxjFDV1l3t3V7csm1jJDq-Rq99ql3y7v1KqUDvRaE9uIndRsTVh0Oxo5WrNUYM_YX_a-LQTZgULubXIzD_93Z26DpSRQ-zRu3JmTYcmjF6hjYor9gEN2"/>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-semibold text-gray-900 dark:text-white">Truffle Wagyu Burger</h4>
+<span class="text-xs font-medium text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">x1</span>
+</div>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">Medium Rare, No Onions</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<img alt="Fresh Orange Juice" class="w-16 h-16 rounded-2xl object-cover shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlFXLuzu1UdGBP5rUCngS3_PmiyIofQ7blHK0lFBChG2A0UG60Ftcx-wjOCTOVaMBa4-99Hgam6Z9aMS8sZlfMeh1HweNpfrjuHUb6aScLqHpg3_ZG5QobuVm_A9QoEB25pC-zcFRCrqRkTnUWJi4gRpsuEQScgJOURJFZenkYwPHyddFU7h76y-ImKeRjUn1eg_Am8EnUIuV1qvciJXTM85wpVIzDpOynSqxEpPeymAI0eDVIak14RRnWI1S4wJXKsn8TS7YiQ9kg"/>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-semibold text-gray-900 dark:text-white">Fresh Orange Juice</h4>
+<span class="text-xs font-medium text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">x1</span>
+</div>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">Chilled, No Ice</p>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center">
+<span class="text-text-secondary-light dark:text-text-secondary-dark text-sm">Total Amount</span>
+<span class="font-display font-bold text-xl text-gray-900 dark:text-white">$48.00</span>
+</div>
+</div>
+</main>
+<div class="fixed bottom-28 right-6 z-20">
+<button class="glass-btn text-primary bg-white/80 dark:bg-surface-dark/80 backdrop-blur-lg shadow-lg dark:shadow-black/50 hover:scale-105 transition-transform px-5 py-3 rounded-full flex items-center gap-2 border border-white/20 dark:border-white/10">
+<span class="material-icons-outlined text-xl">support_agent</span>
+<span class="font-medium text-sm">Need Help?</span>
+</button>
+</div>
+<div class="fixed bottom-6 left-0 right-0 px-6 z-30">
+<div class="bg-surface-light dark:bg-surface-dark rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-2 flex justify-between items-center relative overflow-hidden">
+<button class="flex-1 flex flex-col items-center justify-center py-3 text-gray-400 dark:text-gray-500 hover:text-primary transition-colors">
+<span class="material-icons-outlined text-2xl">home</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center py-3 text-gray-400 dark:text-gray-500 hover:text-primary transition-colors">
+<span class="material-icons-outlined text-2xl">spa</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center py-3 relative">
+<div class="absolute inset-0 bg-primary/10 rounded-2xl mx-2"></div>
+<span class="material-icons text-2xl text-primary relative z-10">receipt_long</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center py-3 text-gray-400 dark:text-gray-500 hover:text-primary transition-colors">
+<span class="material-icons-outlined text-2xl">person</span>
+</button>
+</div>
+</div>
+
+</body></html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Roomie Guest - Phone Verification</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "secondary": "#1e293b", 
+                        "background-light": "#f8f9fc",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px"},
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(0,0,0,0.05)',
+                        'input': '0 2px 8px rgba(0,0,0,0.04)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>.glass-panel-light {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .glass-input-light {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-input-light.active {
+            border-color: #1152d4;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(17, 82, 212, 0.05), 0 4px 12px rgba(17, 82, 212, 0.1);
+        }
+        .glass-button-light {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .glass-button-light:active {
+            background: rgba(0, 0, 0, 0.05);
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light font-display text-slate-900 min-h-screen flex items-center justify-center p-0 selection:bg-primary selection:text-white">
+<div class="relative w-full max-w-md h-screen bg-background-light flex flex-col overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+<div class="absolute top-[-5%] right-[-10%] w-[400px] h-[400px] rounded-full bg-blue-100/40 blur-[80px]"></div>
+<div class="absolute bottom-[10%] left-[-10%] w-[300px] h-[300px] rounded-full bg-indigo-50/60 blur-[60px]"></div>
+</div>
+<header class="relative z-10 flex items-center justify-between px-6 pt-12 pb-4">
+<button aria-label="Go Back" class="w-10 h-10 rounded-full glass-button-light flex items-center justify-center text-slate-700 hover:text-primary transition-colors">
+<span class="material-icons text-xl">arrow_back_ios_new</span>
+</button>
+<div class="w-10"></div>
+</header>
+<main class="relative z-10 flex-1 flex flex-col px-8 pt-6">
+<div class="mb-12">
+<h1 class="text-3xl font-bold mb-3 tracking-tight text-slate-900">Verify Phone</h1>
+<p class="text-base text-slate-500 leading-relaxed font-medium">
+                Enter the 4-digit code sent to <br/>
+<span class="text-primary font-semibold tracking-wide">+1 234 ••• ••89</span>
+</p>
+</div>
+<div class="flex justify-between gap-4 mb-8 px-2">
+<div class="w-14 h-16 rounded-2xl glass-input-light active flex items-center justify-center text-2xl font-bold text-slate-800">
+                5
+            </div>
+<div class="w-14 h-16 rounded-2xl glass-input-light active flex items-center justify-center relative ring-1 ring-primary/20">
+<div class="w-0.5 h-6 bg-primary animate-pulse rounded-full"></div>
+</div>
+<div class="w-14 h-16 rounded-2xl glass-input-light flex items-center justify-center text-2xl font-bold text-slate-800">
+</div>
+<div class="w-14 h-16 rounded-2xl glass-input-light flex items-center justify-center text-2xl font-bold text-slate-800">
+</div>
+</div>
+<div class="flex flex-col items-center gap-2 mb-auto">
+<p class="text-sm text-slate-500 font-medium">
+                Didn't receive the code?
+            </p>
+<div class="flex items-center gap-2">
+<span class="text-sm font-semibold text-slate-400 cursor-not-allowed">Resend Code</span>
+<span class="text-xs font-mono text-primary bg-blue-50 px-2 py-0.5 rounded-md font-bold">00:30</span>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-xl shadow-[0_8px_20px_-6px_rgba(17,82,212,0.3)] transition-all transform active:scale-[0.98] mb-8 disabled:opacity-50 disabled:cursor-not-allowed" disabled="">
+            Verify Code
+        </button>
+<div class="grid grid-cols-3 gap-y-4 gap-x-6 pb-8 mx-auto w-full max-w-[320px]">
+<button class="h-14 rounded-xl text-2xl font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors">1</button>
+<button class="h-14 rounded-xl text-2xl font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors">2</button>
+<button class="h-14 rounded-xl text-2xl font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors">3</button>
+<button class="h-14 rounded-xl text-2xl font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors">4</button>
+<button class="h-14 rounded-xl text-2xl font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors">5</button>
+<button class="h-14 rounded-xl text-2xl font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors">6</button>
+<button class="h-14 rounded-xl text-2xl font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors">7</button>
+<button class="h-14 rounded-xl text-2xl font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors">8</button>
+<button class="h-14 rounded-xl text-2xl font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors">9</button>
+<div class="h-14"></div>
+<button class="h-14 rounded-xl text-2xl font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors">0</button>
+<button class="h-14 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 transition-colors">
+<span class="material-icons text-2xl">backspace</span>
+</button>
+</div>
+</main>
+<div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-slate-800/20 rounded-full z-20"></div>
+</div>
+</body></html>

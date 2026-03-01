@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Housekeeping &amp; AI Assistant - Roomie Guest</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1052d5",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(16, 82, 213, 0.1);
+        }
+        .ai-pulse {
+            box-shadow: 0 0 0 0 rgba(16, 82, 213, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 82, 213, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 82, 213, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 82, 213, 0); }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<!-- Main Container (Mobile Form Factor) -->
+<div class="relative flex h-screen max-w-md mx-auto flex-col bg-white dark:bg-slate-900 overflow-hidden shadow-2xl">
+<!-- Header -->
+<header class="flex items-center justify-between px-6 pt-12 pb-4">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</button>
+<h1 class="text-xl font-bold tracking-tight">Housekeeping</h1>
+<div class="w-10"></div> <!-- Spacer for symmetry -->
+</header>
+<!-- Scrollable Content Area -->
+<main class="flex-1 overflow-y-auto custom-scrollbar px-6 pb-40">
+<div class="mt-4 mb-6">
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white">Premium Services</h2>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Select items for your room</p>
+</div>
+<!-- Services List -->
+<div class="space-y-3">
+<!-- Item: Fresh Towels -->
+<div class="flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm">
+<div class="flex items-center gap-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+<span class="material-symbols-outlined">layers</span>
+</div>
+<div>
+<p class="font-semibold text-slate-900 dark:text-white">Fresh Towels</p>
+<p class="text-xs text-slate-400">Set of 2 Cotton Towels</p>
+</div>
+</div>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Item: Room Cleaning -->
+<div class="flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm">
+<div class="flex items-center gap-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+<span class="material-symbols-outlined">auto_fix_high</span>
+</div>
+<div>
+<p class="font-semibold text-slate-900 dark:text-white">Room Cleaning</p>
+<p class="text-xs text-slate-400">Complete deep clean</p>
+</div>
+</div>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Item: Extra Pillows -->
+<div class="flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm">
+<div class="flex items-center gap-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+<span class="material-symbols-outlined">bedroom_parent</span>
+</div>
+<div>
+<p class="font-semibold text-slate-900 dark:text-white">Extra Pillows</p>
+<p class="text-xs text-slate-400">Hypoallergenic memory foam</p>
+</div>
+</div>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Item: Toiletries Refill -->
+<div class="flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm">
+<div class="flex items-center gap-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+<span class="material-symbols-outlined">sanitizer</span>
+</div>
+<div>
+<p class="font-semibold text-slate-900 dark:text-white">Toiletries Refill</p>
+<p class="text-xs text-slate-400">Luxury soaps &amp; shampoos</p>
+</div>
+</div>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Item: Laundry Service -->
+<div class="flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm">
+<div class="flex items-center gap-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+<span class="material-symbols-outlined">checkroom</span>
+</div>
+<div>
+<p class="font-semibold text-slate-900 dark:text-white">Laundry Service</p>
+<p class="text-xs text-slate-400">Same day wash &amp; fold</p>
+</div>
+</div>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<!-- AI Section Title -->
+<div class="mt-10 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">psychology_alt</span>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Ask AI Agent</h3>
+</div>
+<!-- AI Liquid Glass Input -->
+<div class="relative w-full p-1 rounded-full ai-pulse mb-8">
+<div class="liquid-glass rounded-full flex items-center px-6 py-4 border border-white/50">
+<input class="w-full bg-transparent border-none focus:ring-0 text-slate-800 dark:text-white placeholder:text-slate-400 placeholder:font-medium font-medium" placeholder="Tell our AI what you need..." type="text"/>
+<button class="ml-2 flex items-center justify-center h-10 w-10 rounded-full bg-primary text-white">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+<!-- Subtle decorative hint -->
+<p class="mt-4 px-4 text-xs text-center text-slate-400 italic">Try: "I need 5 more hangers and a bottle of sparkling water"</p>
+</div>
+</main>
+<!-- Floating Pill Bottom Navigation Bar -->
+<div class="absolute bottom-8 left-0 right-0 px-6">
+<nav class="flex h-16 w-full items-center justify-around rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-lg shadow-2xl border border-slate-200/50 dark:border-slate-700/50 px-4">
+<a class="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-bold">HOME</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined">room_service</span>
+<span class="text-[10px] font-bold">SERVICES</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-[10px] font-bold">ORDERS</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="text-[10px] font-bold">PROFILE</span>
+</a>
+</nav>
+</div>
+<!-- IOS Indicator Bar -->
+<div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+</div>
+</body></html>

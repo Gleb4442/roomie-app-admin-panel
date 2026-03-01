@@ -1,0 +1,556 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EntrySource {
+  widget
+  qr_room
+  qr_lobby
+  qr_restaurant
+  qr_spa
+  qr_elevator
+  sms_booking
+  organic
+  direct
+}
+
+enum JourneyStage {
+  PRE_ARRIVAL
+  CHECKED_IN
+  IN_STAY
+  CHECKOUT
+  POST_STAY
+  BETWEEN_STAYS
+}
+
+enum ServiceSource {
+  MANUAL
+  POS_SYNC
+}
+
+enum OrderType {
+  FOOD
+  HOUSEKEEPING
+  SPA
+  TRANSPORT
+}
+
+enum OrderStatus {
+  PENDING
+  SENT_TO_POS
+  CONFIRMED
+  PREPARING
+  READY
+  IN_TRANSIT
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+model GuestAccount {
+  id             String      @id @default(uuid())
+  email          String?     @unique
+  phone          String?     @unique
+  firstName      String
+  lastName       String?
+  phoneVerified  Boolean     @default(false)
+  emailVerified  Boolean     @default(false)
+  createdVia     EntrySource @default(organic)
+  roomieChatId   String?
+  profile        Json?
+  preferences    Json?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  stays             GuestStay[]
+  appOpens          AppOpen[]
+  hotelLinks        GuestHotel[]
+  orders            Order[]
+  serviceRequests   ServiceRequest[]
+
+  @@map("guest_accounts")
+}
+
+model Hotel {
+  id            String   @id @default(uuid())
+  name          String
+  slug          String   @unique
+  location      String?
+  description   String?
+  theme         Json?
+  accentColor   String?  @default("#1152d4")
+  imageUrl      String?
+  contactEmail  String?
+  contactPhone  String?
+  timezone      String   @default("UTC")
+  settings      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  stays              GuestStay[]
+  appOpens           AppOpen[]
+  guestLinks         GuestHotel[]
+  services           HotelService[]
+  posConfig          HotelPOSConfig?
+  pmsConfig          HotelPMSConfig?
+  smsConfig          HotelSMSConfig?
+  smsLogs            SMSLog[]
+  qrCodes            QRCode[]
+  managerLinks       DashboardManagerHotel[]
+  serviceCategories  ServiceCategory[]
+  serviceRequests    ServiceRequest[]
+  tmsConfig          HotelTMSConfig?
+
+  @@map("hotels")
+}
+
+model GuestHotel {
+  id            String      @id @default(uuid())
+  guestId       String
+  hotelId       String
+  source        EntrySource @default(organic)
+  linkedAt      DateTime    @default(now())
+  roomNumber    String?
+  contextParams Json?
+
+  guest         GuestAccount @relation(fields: [guestId], references: [id])
+  hotel         Hotel        @relation(fields: [hotelId], references: [id])
+
+  @@unique([guestId, hotelId])
+  @@map("guest_hotels")
+}
+
+model GuestStay {
+  id                      String       @id @default(uuid())
+  guestId                 String
+  hotelId                 String
+  bookingRef              String?
+  stage                   JourneyStage @default(BETWEEN_STAYS)
+  roomNumber              String?
+  roomType                String?
+  checkIn                 DateTime?
+  checkOut                DateTime?
+  enteredVia              EntrySource?
+  pmsData                 Json?
+  preCheckinCompleted     Boolean      @default(false)
+  preCheckinUrl           String?
+  preCheckinExpiresAt     DateTime?
+  preCheckinData          Json?
+  externalReservationId   String?      @unique
+  pmsProvider             String?
+  pmsRawData              Json?
+  source                  String?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  guest             GuestAccount      @relation(fields: [guestId], references: [id])
+  hotel             Hotel             @relation(fields: [hotelId], references: [id])
+  stageTransitions  StageTransition[]
+  smsLogs           SMSLog[]
+  serviceRequests   ServiceRequest[]
+
+  @@map("guest_stays")
+}
+
+model AppOpen {
+  id                      String      @id @default(uuid())
+  guestId                 String?
+  hotelId                 String?
+  source                  EntrySource
+  contextParams           Json?
+  deviceInfo              Json?
+  resultedInRegistration  Boolean     @default(false)
+  createdAt               DateTime    @default(now())
+
+  guest                   GuestAccount? @relation(fields: [guestId], references: [id])
+  hotel                   Hotel?        @relation(fields: [hotelId], references: [id])
+
+  @@map("app_opens")
+}
+
+// ──── PMS Config ─────────────────────────────────
+
+model HotelPMSConfig {
+  id                  String    @id @default(uuid())
+  hotelId             String    @unique
+  pmsType             String
+  credentials         Json
+  pmsHotelId          String?
+  syncMode            String    @default("DISABLED")
+  lastSyncAt          DateTime?
+  isActive            Boolean   @default(false)
+  preCheckinUrl       String?
+  syncIntervalMinutes Int       @default(15)
+  syncEnabled         Boolean   @default(true)
+  webhookSecret       String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  hotel               Hotel     @relation(fields: [hotelId], references: [id])
+
+  @@map("hotel_pms_configs")
+}
+
+// ──── POS Config ─────────────────────────────────
+
+model HotelPOSConfig {
+  id            String    @id @default(uuid())
+  hotelId       String    @unique
+  posType       String
+  apiUrl        String
+  accessToken   String
+  spotId        String?
+  syncEnabled   Boolean   @default(false)
+  syncInterval  Int       @default(60)
+  lastSyncAt    DateTime?
+  lastError     String?
+  categoryMap   Json?
+
+  hotel         Hotel     @relation(fields: [hotelId], references: [id])
+
+  @@map("hotel_pos_configs")
+}
+
+// ──── Hotel Services (Menu) ──────────────────────
+
+model HotelService {
+  id            String        @id @default(uuid())
+  hotelId       String
+  category      String
+  name          String
+  description   String?
+  price         Decimal?
+  currency      String        @default("EUR")
+  imageUrl      String?
+  isAvailable   Boolean       @default(true)
+  sortOrder     Int           @default(0)
+  cookingTime   Int?
+
+  source        ServiceSource @default(MANUAL)
+  posItemId     String?
+  posCategory   String?
+  posData       Json?
+  lastSyncAt    DateTime?
+
+  hotel         Hotel         @relation(fields: [hotelId], references: [id])
+  orderItems    OrderItem[]
+
+  @@unique([hotelId, posItemId])
+  @@index([hotelId, category, isAvailable])
+  @@map("hotel_services")
+}
+
+// ──── Orders ─────────────────────────────────────
+
+model Order {
+  id                  String      @id @default(uuid())
+  orderNumber         String      @unique
+  guestId             String
+  hotelId             String
+  type                OrderType
+  status              OrderStatus @default(PENDING)
+  roomNumber          String?
+  specialInstructions String?
+  deliveryTime        String?
+  subtotal            Decimal     @default(0)
+  currency            String      @default("EUR")
+
+  posOrderId          String?
+  posStatus           String?
+  posTransactionId    String?
+
+  maxCookingTime      Int?
+  estimatedAt         DateTime?
+
+  confirmedAt         DateTime?
+  preparingAt         DateTime?
+  readyAt             DateTime?
+  inTransitAt         DateTime?
+  deliveredAt         DateTime?
+  cancelledAt         DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  guest               GuestAccount @relation(fields: [guestId], references: [id])
+  items               OrderItem[]
+
+  @@index([guestId, hotelId])
+  @@index([status])
+  @@index([posOrderId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id            String       @id @default(uuid())
+  orderId       String
+  serviceId     String
+  quantity      Int          @default(1)
+  price         Decimal
+  modifiers     Json?
+  notes         String?
+
+  order         Order        @relation(fields: [orderId], references: [id])
+  service       HotelService @relation(fields: [serviceId], references: [id])
+
+  @@map("order_items")
+}
+
+// ──── Stage Transition Log ──────────────────────
+
+model StageTransition {
+  id          String    @id @default(uuid())
+  guestStayId String
+  fromStage   String
+  toStage     String
+  reason      String
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+
+  guestStay   GuestStay @relation(fields: [guestStayId], references: [id])
+
+  @@index([guestStayId])
+  @@map("stage_transitions")
+}
+
+// ──── SMS Config ────────────────────────────────
+
+model HotelSMSConfig {
+  id          String   @id @default(uuid())
+  hotelId     String   @unique
+  provider    String
+  credentials Json
+  senderName  String
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hotel       Hotel    @relation(fields: [hotelId], references: [id])
+
+  @@map("hotel_sms_configs")
+}
+
+// ──── SMS Logs ──────────────────────────────────
+
+model SMSLog {
+  id          String    @id @default(uuid())
+  hotelId     String
+  guestId     String?
+  guestStayId String?
+  phone       String
+  template    String
+  provider    String
+  status      String    @default("queued")
+  externalId  String?
+  errorMsg    String?
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  hotel       Hotel     @relation(fields: [hotelId], references: [id])
+  guestStay   GuestStay? @relation(fields: [guestStayId], references: [id])
+
+  @@index([hotelId, createdAt])
+  @@index([guestStayId])
+  @@map("sms_logs")
+}
+
+// ──── QR Codes ──────────────────────────────────
+
+model QRCode {
+  id           String   @id @default(uuid())
+  hotelId      String
+  type         String   @default("in_room")
+  label        String
+  roomNumber   String?
+  deepLink     String
+  qrImagePath  String?
+  pdfPath      String?
+  isActive     Boolean  @default(true)
+  scanCount    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  hotel        Hotel    @relation(fields: [hotelId], references: [id])
+  scans        QRScan[]
+
+  @@unique([hotelId, roomNumber])
+  @@index([hotelId])
+  @@map("qr_codes")
+}
+
+model QRScan {
+  id        String   @id @default(uuid())
+  qrCodeId  String
+  guestId   String?
+  userAgent String?
+  ip        String?
+  scannedAt DateTime @default(now())
+
+  qrCode    QRCode   @relation(fields: [qrCodeId], references: [id])
+
+  @@index([qrCodeId, scannedAt])
+  @@map("qr_scans")
+}
+
+// ──── Dashboard Managers ─────────────────────────
+
+model DashboardManager {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("manager")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  hotels       DashboardManagerHotel[]
+
+  @@map("dashboard_managers")
+}
+
+model DashboardManagerHotel {
+  id        String @id @default(uuid())
+  managerId String
+  hotelId   String
+
+  manager   DashboardManager @relation(fields: [managerId], references: [id], onDelete: Cascade)
+  hotel     Hotel            @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@unique([managerId, hotelId])
+  @@map("dashboard_manager_hotels")
+}
+
+// ──── Service Categories (Task Management) ───────────────────
+
+model ServiceCategory {
+  id              String   @id @default(uuid())
+  hotelId         String
+  name            String
+  nameUk          String?
+  nameEn          String?
+  slug            String
+  icon            String?
+  description     String?
+  descriptionUk   String?
+  descriptionEn   String?
+  sortOrder       Int      @default(0)
+  isActive        Boolean  @default(true)
+
+  requiresRoom      Boolean @default(true)
+  requiresTimeSlot  Boolean @default(false)
+  autoAccept        Boolean @default(false)
+  estimatedMinutes  Int?
+
+  hotel           Hotel           @relation(fields: [hotelId], references: [id])
+  items           ServiceItem[]
+  requests        ServiceRequest[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([hotelId, slug])
+  @@index([hotelId, isActive])
+  @@map("service_categories")
+}
+
+model ServiceItem {
+  id              String   @id @default(uuid())
+  categoryId      String
+  name            String
+  nameUk          String?
+  nameEn          String?
+  description     String?
+  descriptionUk   String?
+  descriptionEn   String?
+  icon            String?
+  price           Float    @default(0)
+  currency        String   @default("UAH")
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  maxQuantity     Int      @default(10)
+
+  category        ServiceCategory    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  requestItems    ServiceRequestItem[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([categoryId, isActive])
+  @@map("service_items")
+}
+
+// ──── Service Requests (Guest Orders for Hotel Services) ─────
+
+model ServiceRequest {
+  id              String   @id @default(uuid())
+  hotelId         String
+  guestId         String
+  guestStayId     String?
+  categoryId      String
+
+  roomNumber      String?
+  comment         String?
+  requestedTime   DateTime?
+  scheduledTime   DateTime?
+
+  status          String   @default("pending")
+  rejectionReason String?
+  completedAt     DateTime?
+
+  totalAmount     Float    @default(0)
+  isPaid          Boolean  @default(false)
+
+  externalTaskId  String?
+  externalSystem  String?
+
+  hotel           Hotel              @relation(fields: [hotelId], references: [id])
+  guest           GuestAccount       @relation(fields: [guestId], references: [id])
+  guestStay       GuestStay?         @relation(fields: [guestStayId], references: [id])
+  category        ServiceCategory    @relation(fields: [categoryId], references: [id])
+  items           ServiceRequestItem[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([hotelId, status])
+  @@index([guestId])
+  @@index([guestStayId])
+  @@index([hotelId, createdAt])
+  @@map("service_requests")
+}
+
+model ServiceRequestItem {
+  id                String   @id @default(uuid())
+  serviceRequestId  String
+  serviceItemId     String
+  quantity          Int      @default(1)
+  unitPrice         Float    @default(0)
+  totalPrice        Float    @default(0)
+
+  serviceRequest    ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  serviceItem       ServiceItem    @relation(fields: [serviceItemId], references: [id])
+
+  @@index([serviceRequestId])
+  @@map("service_request_items")
+}
+
+// ──── TMS Configuration ──────────────────────────────────────
+
+model HotelTMSConfig {
+  id              String   @id @default(uuid())
+  hotelId         String   @unique
+  provider        String
+  credentials     Json
+  enabled         Boolean  @default(false)
+  categoryMapping Json     @default("{}")
+
+  hotel           Hotel    @relation(fields: [hotelId], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("hotel_tms_configs")
+}

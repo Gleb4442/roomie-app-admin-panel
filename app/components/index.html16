@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Past Orders &amp; Requests - Roomie Guest</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1052D5",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            min-height: max(884px, 100dvh);
+        }
+        .glass-nav {
+            @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-slate-800/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)];
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="max-w-[430px] mx-auto min-h-screen bg-background-light dark:bg-background-dark relative pb-32 overflow-hidden shadow-2xl">
+<div class="h-12 bg-white dark:bg-slate-900"></div>
+<header class="bg-white dark:bg-slate-900 px-6 pt-4 pb-6 sticky top-0 z-10">
+<div class="flex items-center justify-between mb-6">
+<div class="w-10"></div>
+<div class="text-xs font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-500">Room 402</div>
+<button class="w-10 h-10 flex items-center justify-end text-primary">
+<span class="material-icons">help_outline</span>
+</button>
+</div>
+<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Orders &amp; Requests</h1>
+</header>
+<div class="px-6 py-4">
+<div class="bg-slate-200/50 dark:bg-slate-800 p-1 rounded-xl flex">
+<button class="flex-1 py-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+                Active (2)
+            </button>
+<button class="flex-1 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white">
+                Past
+            </button>
+</div>
+</div>
+<main class="px-6 space-y-6">
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">History</h2>
+</div>
+<div class="space-y-4">
+<div class="bg-white dark:bg-slate-900 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex justify-between items-start mb-3">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center text-primary">
+<span class="material-icons">restaurant</span>
+</div>
+<div>
+<h3 class="font-semibold text-slate-900 dark:text-white">Classic Club Sandwich</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">Oct 14 • Room Service</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold uppercase tracking-wide rounded-full">
+                            Delivered
+                        </span>
+</div>
+<div class="pt-3 mt-1 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
+<div class="flex items-center gap-1 text-slate-400">
+<span class="material-icons text-sm">star</span>
+<span class="material-icons text-sm">star</span>
+<span class="material-icons text-sm">star</span>
+<span class="material-icons text-sm">star</span>
+<span class="material-icons text-sm text-slate-200">star</span>
+</div>
+<button class="px-4 py-1.5 rounded-full border border-primary text-primary text-xs font-semibold hover:bg-primary hover:text-white transition-colors">
+                            Reorder
+                        </button>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+<span class="material-icons">cleaning_services</span>
+</div>
+<div>
+<h3 class="font-semibold text-slate-900 dark:text-white">Housekeeping - Cleaning</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">Oct 13 • Service</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide rounded-full">
+                            Completed
+                        </span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 opacity-75">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-rose-50 dark:bg-rose-900/20 rounded-lg flex items-center justify-center text-rose-500">
+<span class="material-icons">local_taxi</span>
+</div>
+<div>
+<h3 class="font-semibold text-slate-900 dark:text-white decoration-slate-400 decoration-1">Taxi Booking</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">Oct 12 • Concierge</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-[10px] font-bold uppercase tracking-wide rounded-full">
+                            Cancelled
+                        </span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] z-50">
+<nav class="glass-nav rounded-full h-16 px-2 flex items-center justify-between">
+<button class="flex-1 flex flex-col items-center justify-center gap-0.5 text-slate-400 dark:text-slate-500">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center gap-0.5 text-slate-400 dark:text-slate-500">
+<span class="material-symbols-outlined text-[24px]">grid_view</span>
+<span class="text-[10px] font-medium">Services</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center gap-0.5 text-primary">
+<span class="material-symbols-outlined text-[24px] font-bold" style="font-variation-settings: 'FILL' 1">receipt_long</span>
+<span class="text-[10px] font-bold">Orders</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center gap-0.5 text-slate-400 dark:text-slate-500">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</nav>
+</div>
+</div>
+
+</body></html>
