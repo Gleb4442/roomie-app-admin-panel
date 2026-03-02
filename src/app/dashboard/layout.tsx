@@ -17,6 +17,9 @@ const NAV = [
   { href: '/qr', label: 'QR Codes', icon: QRIcon },
   { href: '/stats', label: 'Statistics', icon: StatsIcon },
   { href: '/sms', label: 'SMS Logs', icon: SMSIcon },
+  { href: '/staff', label: 'Staff', icon: StaffIcon },
+  { href: '/templates', label: 'Templates', icon: TemplatesIcon },
+  { href: '/tasks', label: 'TMS Tasks', icon: TasksIcon },
 ];
 
 function Sidebar({ hotelId }: { hotelId: string }) {
@@ -201,6 +204,27 @@ function SMSIcon({ active }: { active: boolean }) {
   return (
     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke={active ? '#F0A500' : '#64748B'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+    </svg>
+  );
+}
+function StaffIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke={active ? '#F0A500' : '#64748B'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    </svg>
+  );
+}
+function TemplatesIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke={active ? '#F0A500' : '#64748B'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+    </svg>
+  );
+}
+function TasksIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke={active ? '#F0A500' : '#64748B'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
     </svg>
   );
 }

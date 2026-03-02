@@ -131,4 +131,163 @@ export const dashboardApi = {
 
   downloadAllQRZip: (hotelId: string, token: string): string =>
     `${getApiBase()}/api/dashboard/hotels/${hotelId}/qr/download-all?token=${token}`,
+
+  // ── Staff TMS ──────────────────────────────────────────────
+
+  getStaffList: async (hotelId: string, token: string): Promise<StaffMember[]> => {
+    const res = await api.get(`/api/dashboard/staff/${hotelId}`, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  createStaff: async (hotelId: string, token: string, data: CreateStaffData): Promise<StaffMember> => {
+    const res = await api.post(`/api/dashboard/staff/${hotelId}`, data, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  updateStaff: async (hotelId: string, staffId: string, token: string, data: UpdateStaffData): Promise<StaffMember> => {
+    const res = await api.patch(`/api/dashboard/staff/${hotelId}/${staffId}`, data, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  deactivateStaff: async (hotelId: string, staffId: string, token: string) => {
+    const res = await api.delete(`/api/dashboard/staff/${hotelId}/${staffId}`, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  resetStaffPin: async (hotelId: string, staffId: string, token: string, pin: string) => {
+    const res = await api.post(
+      `/api/dashboard/staff/${hotelId}/${staffId}/reset-pin`,
+      { pin },
+      { headers: authHeader(token) },
+    );
+    return res.data;
+  },
+
+  getTMSStats: async (hotelId: string, token: string): Promise<TMSStats> => {
+    const res = await api.get(`/api/dashboard/staff/${hotelId}/stats`, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  // ── Templates ─────────────────────────────────────────────
+
+  getTemplates: async (hotelId: string, token: string): Promise<TaskTemplate[]> => {
+    const res = await api.get(`/api/dashboard/staff/${hotelId}/templates`, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  createTemplate: async (hotelId: string, token: string, data: TemplateFormData): Promise<TaskTemplate> => {
+    const res = await api.post(`/api/dashboard/staff/${hotelId}/templates`, data, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  updateTemplate: async (
+    hotelId: string,
+    templateId: string,
+    token: string,
+    data: Partial<TemplateFormData>,
+  ): Promise<TaskTemplate> => {
+    const res = await api.patch(
+      `/api/dashboard/staff/${hotelId}/templates/${templateId}`,
+      data,
+      { headers: authHeader(token) },
+    );
+    return res.data;
+  },
+
+  deleteTemplate: async (hotelId: string, templateId: string, token: string) => {
+    const res = await api.delete(
+      `/api/dashboard/staff/${hotelId}/templates/${templateId}`,
+      { headers: authHeader(token) },
+    );
+    return res.data;
+  },
 };
+
+// ── Staff TMS Types ──────────────────────────────────────────
+
+export interface StaffMember {
+  id: string;
+  email: string;
+  phone?: string;
+  firstName: string;
+  lastName?: string;
+  role: string;
+  department: string;
+  isActive: boolean;
+  assignedFloor?: string;
+  avatarUrl?: string;
+  createdAt: string;
+  shifts?: { startedAt: string }[];
+}
+
+export interface CreateStaffData {
+  email: string;
+  firstName: string;
+  lastName?: string;
+  phone?: string;
+  role: string;
+  department: string;
+  password: string;
+  assignedFloor?: string;
+}
+
+export interface UpdateStaffData {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  role?: string;
+  department?: string;
+  isActive?: boolean;
+  assignedFloor?: string;
+  password?: string;
+}
+
+export interface TMSStats {
+  byStatus: { status: string; count: number }[];
+  byDepartment: { department: string; count: number }[];
+  slaCompliance: number | null;
+  slaTotal: number;
+  totalTasks: number;
+}
+
+export interface ChecklistItemData {
+  id?: string;
+  text: string;
+  isRequired: boolean;
+  sortOrder: number;
+}
+
+export interface TaskTemplate {
+  id: string;
+  hotelId: string;
+  name: string;
+  department: string;
+  defaultPriority: string;
+  slaMinutes?: number | null;
+  isActive: boolean;
+  createdAt: string;
+  checklistItems: ChecklistItemData[];
+}
+
+export interface TemplateFormData {
+  name: string;
+  department: string;
+  defaultPriority: string;
+  slaMinutes?: number | null;
+  isActive?: boolean;
+  checklistItems: { text: string; isRequired: boolean; sortOrder: number }[];
+}
