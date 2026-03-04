@@ -215,6 +215,68 @@ export const dashboardApi = {
     );
     return res.data;
   },
+
+  // ── Housekeeping ───────────────────────────────────────────
+
+  getRoomsBoard: async (hotelId: string, token: string): Promise<RoomsBoardData> => {
+    const res = await api.get(`/api/dashboard/housekeeping/${hotelId}/board`, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  listRooms: async (hotelId: string, token: string, params?: { floor?: number; status?: string }): Promise<{ rooms: Room[] }> => {
+    const res = await api.get(`/api/dashboard/housekeeping/${hotelId}/rooms`, {
+      headers: authHeader(token),
+      params,
+    });
+    return res.data;
+  },
+
+  getRoomDetail: async (hotelId: string, roomId: string, token: string): Promise<{ room: Room }> => {
+    const res = await api.get(`/api/dashboard/housekeeping/${hotelId}/rooms/${roomId}`, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  bulkCreateRooms: async (hotelId: string, token: string, rooms: BulkCreateRoomItem[]): Promise<{ created: number; rooms: Room[] }> => {
+    const res = await api.post(`/api/dashboard/housekeeping/${hotelId}/rooms/bulk`, { rooms }, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  updateRoomHKStatus: async (hotelId: string, roomId: string, token: string, status: string, notes?: string) => {
+    const res = await api.patch(`/api/dashboard/housekeeping/${hotelId}/rooms/${roomId}/status`, { status, notes }, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  assignRoomStaff: async (hotelId: string, roomId: string, token: string, data: { staffId?: string | null; inspectorId?: string | null }) => {
+    const res = await api.patch(`/api/dashboard/housekeeping/${hotelId}/rooms/${roomId}/assign`, data, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  toggleRoomRush: async (hotelId: string, roomId: string, token: string) => {
+    const res = await api.patch(`/api/dashboard/housekeeping/${hotelId}/rooms/${roomId}/rush`, {}, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  toggleRoomDND: async (hotelId: string, roomId: string, token: string, active: boolean) => {
+    const res = await api.patch(`/api/dashboard/housekeeping/${hotelId}/rooms/${roomId}/dnd`, { active }, {
+      headers: authHeader(token),
+    });
+    return res.data;
+  },
+
+  getRoomsSSEUrl: (hotelId: string, token: string): string =>
+    `${getApiBase()}/api/v1/sse/tasks?channels=rooms:${hotelId}&token=${token}`,
 };
 
 // ── Staff TMS Types ──────────────────────────────────────────
@@ -290,4 +352,55 @@ export interface TemplateFormData {
   slaMinutes?: number | null;
   isActive?: boolean;
   checklistItems: { text: string; isRequired: boolean; sortOrder: number }[];
+}
+
+// ── Housekeeping Types ────────────────────────────────────────
+
+export type HousekeepingStatus = 'DIRTY' | 'CLEANING' | 'CLEANED' | 'INSPECTED' | 'READY' | 'OUT_OF_ORDER' | 'DO_NOT_DISTURB';
+export type OccupancyStatus = 'VACANT' | 'OCCUPIED' | 'STAYOVER' | 'CHECKOUT' | 'CHECKIN';
+
+export interface Room {
+  id: string;
+  hotelId: string;
+  roomNumber: string;
+  floor: number;
+  roomType?: string;
+  maxOccupancy?: number;
+  isActive: boolean;
+  housekeepingStatus: HousekeepingStatus;
+  occupancyStatus: OccupancyStatus;
+  assignedCleanerId?: string;
+  assignedInspectorId?: string;
+  assignedCleaner?: { id: string; firstName: string; lastName?: string; avatarUrl?: string } | null;
+  assignedInspector?: { id: string; firstName: string; lastName?: string; avatarUrl?: string } | null;
+  lastStatusChangedAt: string;
+  lastCleanedAt?: string;
+  lastInspectedAt?: string;
+  estimatedReadyAt?: string;
+  isRush: boolean;
+  dndActive: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RoomsBoardData {
+  floors: Record<number, Room[]>;
+  stats: {
+    total: number;
+    dirty: number;
+    cleaning: number;
+    cleaned: number;
+    inspected: number;
+    ready: number;
+    outOfOrder: number;
+    dnd: number;
+  };
+}
+
+export interface BulkCreateRoomItem {
+  roomNumber: string;
+  floor: number;
+  roomType?: string;
+  maxOccupancy?: number;
 }

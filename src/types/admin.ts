@@ -59,10 +59,15 @@ export interface POSConfig {
 export interface TMSConfig {
   id?: string;
   hotelId: string;
-  tmsType: string;
-  isActive: boolean;
+  mode: 'BUILT_IN' | 'EXTERNAL' | 'HYBRID';
+  provider: string;
+  enabled: boolean;
   credentials: Record<string, string>;
-  mapping: Record<string, string>;
+  categoryMapping: Record<string, string>;
+  webhookSecret?: string;
+  outgoingWebhookUrl?: string;
+  pollingEnabled: boolean;
+  pollingIntervalMs: number;
 }
 
 export interface AdminQRCode {

@@ -17,6 +17,7 @@ const NAV = [
   { href: '/qr', label: 'QR Codes', icon: QRIcon },
   { href: '/stats', label: 'Statistics', icon: StatsIcon },
   { href: '/sms', label: 'SMS Logs', icon: SMSIcon },
+  { href: '/housekeeping', label: 'Housekeeping', icon: HousekeepingIcon },
   { href: '/staff', label: 'Staff', icon: StaffIcon },
   { href: '/templates', label: 'Templates', icon: TemplatesIcon },
   { href: '/tasks', label: 'TMS Tasks', icon: TasksIcon },
@@ -66,7 +67,7 @@ function Sidebar({ hotelId }: { hotelId: string }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-2 space-y-0.5">
+      <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
         {NAV.map(({ href, label, icon: Icon }) => {
           const to = base + href;
           const isActive = href === '' ? pathname === base || pathname === base + '/' : pathname.startsWith(to);
@@ -225,6 +226,13 @@ function TasksIcon({ active }: { active: boolean }) {
   return (
     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke={active ? '#F0A500' : '#64748B'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+    </svg>
+  );
+}
+function HousekeepingIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke={active ? '#F0A500' : '#64748B'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>
     </svg>
   );
 }

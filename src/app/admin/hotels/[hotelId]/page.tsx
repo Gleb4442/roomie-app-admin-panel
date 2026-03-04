@@ -13,6 +13,7 @@ const TABS = [
   { key: 'pms', label: 'PMS' },
   { key: 'sms', label: 'SMS' },
   { key: 'pos', label: 'POS' },
+  { key: 'tms', label: 'Task Mgmt' },
   { key: 'qr', label: 'QR Codes' },
   { key: 'services', label: 'Services' },
 ];
@@ -103,6 +104,7 @@ export default function HotelConfigPage({ params }: { params: Promise<{ hotelId:
       {tab === 'pms' && <PMSTab hotelId={hotelId} token={token!} />}
       {tab === 'sms' && <SMSTab hotelId={hotelId} token={token!} />}
       {tab === 'pos' && <POSTab hotelId={hotelId} token={token!} />}
+      {tab === 'tms' && <TMSTab hotelId={hotelId} token={token!} />}
       {tab === 'qr' && <QRTab hotelId={hotelId} token={token!} />}
       {tab === 'services' && <ServicesTab hotelId={hotelId} token={token!} />}
     </div>
@@ -432,6 +434,205 @@ function POSTab({ hotelId, token }: { hotelId: string; token: string }) {
           </button>
         )}
       </div>
+    </form>
+  );
+}
+
+// ─── Task Management (TMS) ─────────────────────────────────────────────────
+
+const TMS_PROVIDERS = ['BUILT_IN', 'HOTELKIT', 'FLEXKEEPING', 'HOTSOS', 'GENERIC_WEBHOOK'];
+const TMS_MODES = [
+  { value: 'BUILT_IN', label: 'Built-in TMS', desc: 'Use HotelMol\'s own task management system' },
+  { value: 'EXTERNAL', label: 'External TMS', desc: 'Route all tasks to an external system via API' },
+  { value: 'HYBRID', label: 'Hybrid', desc: 'Some categories go to built-in, others to external TMS' },
+];
+
+function TMSTab({ hotelId, token }: { hotelId: string; token: string }) {
+  const qc = useQueryClient();
+  const { data: cfg, isLoading } = useQuery({
+    queryKey: ['admin-tms', hotelId],
+    queryFn: () => adminApi.getTmsConfig(token, hotelId),
+    enabled: !!token,
+  });
+
+  const [form, setForm] = useState({
+    mode: 'BUILT_IN',
+    provider: 'BUILT_IN',
+    enabled: false,
+    apiUrl: '',
+    apiKey: '',
+    webhookSecret: '',
+    outgoingWebhookUrl: '',
+    pollingEnabled: false,
+    pollingIntervalMs: 30000,
+  });
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [synced, setSynced] = useState(false);
+
+  if (cfg && !synced) {
+    setForm({
+      mode: cfg.mode ?? 'BUILT_IN',
+      provider: cfg.provider ?? 'BUILT_IN',
+      enabled: cfg.enabled ?? false,
+      apiUrl: (cfg.credentials?.apiUrl as string) ?? '',
+      apiKey: (cfg.credentials?.apiKey as string) ?? '',
+      webhookSecret: cfg.webhookSecret ?? '',
+      outgoingWebhookUrl: cfg.outgoingWebhookUrl ?? '',
+      pollingEnabled: cfg.pollingEnabled ?? false,
+      pollingIntervalMs: cfg.pollingIntervalMs ?? 30000,
+    });
+    setSynced(true);
+  }
+
+  const isExternal = form.mode === 'EXTERNAL' || form.mode === 'HYBRID';
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await adminApi.upsertTmsConfig(token, hotelId, {
+        mode: form.mode as 'BUILT_IN' | 'EXTERNAL' | 'HYBRID',
+        provider: isExternal ? form.provider : 'BUILT_IN',
+        enabled: form.enabled,
+        credentials: { apiUrl: form.apiUrl, apiKey: form.apiKey },
+        webhookSecret: form.webhookSecret || undefined,
+        outgoingWebhookUrl: form.outgoingWebhookUrl || undefined,
+        pollingEnabled: form.pollingEnabled,
+        pollingIntervalMs: form.pollingIntervalMs,
+      });
+      qc.invalidateQueries({ queryKey: ['admin-tms', hotelId] });
+      toast.success('TMS config saved');
+    } catch { toast.error('Failed to save TMS config'); }
+    finally { setSaving(false); }
+  };
+
+  const test = async () => {
+    setTesting(true);
+    try {
+      const r = await adminApi.testTmsConnection(token, hotelId);
+      toast.success(r.message || 'Connection successful');
+    } catch { toast.error('Connection test failed'); }
+    finally { setTesting(false); }
+  };
+
+  if (isLoading) return <div className="card h-32 shimmer" />;
+
+  return (
+    <form onSubmit={save} className="space-y-4 max-w-[560px]">
+      {/* Mode */}
+      <div className="card p-5 space-y-3">
+        <h3 className="font-display font-700 text-sm text-white">TMS Mode</h3>
+        <div className="space-y-2">
+          {TMS_MODES.map(m => (
+            <label key={m.value}
+              className="flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors"
+              style={{
+                background: form.mode === m.value ? 'rgba(240,165,0,0.07)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${form.mode === m.value ? 'rgba(240,165,0,0.25)' : 'rgba(255,255,255,0.06)'}`,
+              }}>
+              <input
+                type="radio"
+                name="tms-mode"
+                value={m.value}
+                checked={form.mode === m.value}
+                onChange={() => setForm(f => ({ ...f, mode: m.value, provider: m.value === 'BUILT_IN' ? 'BUILT_IN' : f.provider === 'BUILT_IN' ? 'HOTELKIT' : f.provider }))}
+                className="mt-0.5 accent-gold"
+              />
+              <div>
+                <p className="text-sm font-600 text-white">{m.label}</p>
+                <p className="text-xs text-ink-400 mt-0.5">{m.desc}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        {/* Enable toggle */}
+        <div className="flex items-center justify-between pt-1">
+          <div>
+            <p className="text-sm font-600 text-white">Enable TMS</p>
+            <p className="text-xs text-ink-400">Tasks will be routed according to the selected mode</p>
+          </div>
+          <button type="button" onClick={() => setForm(f => ({ ...f, enabled: !f.enabled }))}
+            className="relative w-11 h-6 rounded-full transition-colors shrink-0"
+            style={{ background: form.enabled ? '#F0A500' : 'rgba(255,255,255,0.1)' }}>
+            <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+              style={{ left: form.enabled ? '22px' : '2px' }} />
+          </button>
+        </div>
+      </div>
+
+      {/* External settings */}
+      {isExternal && (
+        <div className="card p-5 space-y-4">
+          <h3 className="font-display font-700 text-sm text-white">External TMS Settings</h3>
+
+          <div>
+            <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">Provider</label>
+            <select value={form.provider} onChange={e => setForm(f => ({ ...f, provider: e.target.value }))}>
+              {TMS_PROVIDERS.filter(p => p !== 'BUILT_IN').map(p => (
+                <option key={p} value={p}>{p.replace(/_/g, ' ')}</option>
+              ))}
+            </select>
+          </div>
+
+          <Field label="API URL" value={form.apiUrl} onChange={v => setForm(f => ({ ...f, apiUrl: v }))} placeholder="https://api.hotelkit.net/v1" />
+          <Field label="API Key / Token" value={form.apiKey} onChange={v => setForm(f => ({ ...f, apiKey: v }))} placeholder="Bearer token or API key" />
+
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
+            <p className="text-xs font-600 uppercase tracking-widest text-ink-300 mb-3 font-display">Webhook</p>
+            <div className="space-y-3">
+              <Field label="Webhook Secret (incoming)" value={form.webhookSecret} onChange={v => setForm(f => ({ ...f, webhookSecret: v }))} placeholder="Secret for verifying incoming webhooks" />
+              <Field label="Outgoing Webhook URL" value={form.outgoingWebhookUrl} onChange={v => setForm(f => ({ ...f, outgoingWebhookUrl: v }))} placeholder="https://yourtms.com/webhook/hotelmol" />
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-sm font-600 text-white">Polling</p>
+                <p className="text-xs text-ink-400">Poll external TMS for status updates</p>
+              </div>
+              <button type="button" onClick={() => setForm(f => ({ ...f, pollingEnabled: !f.pollingEnabled }))}
+                className="relative w-11 h-6 rounded-full transition-colors shrink-0"
+                style={{ background: form.pollingEnabled ? '#3B82F6' : 'rgba(255,255,255,0.1)' }}>
+                <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+                  style={{ left: form.pollingEnabled ? '22px' : '2px' }} />
+              </button>
+            </div>
+            {form.pollingEnabled && (
+              <div>
+                <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">Interval (ms)</label>
+                <select value={form.pollingIntervalMs} onChange={e => setForm(f => ({ ...f, pollingIntervalMs: Number(e.target.value) }))}>
+                  {[15000, 30000, 60000, 120000, 300000].map(v => (
+                    <option key={v} value={v}>{v / 1000}s</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex gap-2">
+        <SaveBtn saving={saving} />
+        {cfg && isExternal && (
+          <button type="button" onClick={test} disabled={testing}
+            className="px-4 h-10 rounded-lg text-sm font-600 font-display shrink-0 transition-all"
+            style={{ background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }}>
+            {testing ? 'Testing...' : 'Test Connection'}
+          </button>
+        )}
+      </div>
+
+      {cfg && (
+        <p className="text-xs text-ink-500">
+          Current mode: <span className="text-ink-300">{cfg.mode}</span>
+          {cfg.provider !== 'BUILT_IN' && <> · Provider: <span className="text-ink-300">{cfg.provider}</span></>}
+          {cfg.enabled ? <span className="text-teal ml-2">● Enabled</span> : <span className="text-rose ml-2">○ Disabled</span>}
+        </p>
+      )}
     </form>
   );
 }
