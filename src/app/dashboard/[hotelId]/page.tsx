@@ -7,6 +7,7 @@ import { StatCard } from '@/components/ui/StatCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { OrderStatusBadge, StageBadge } from '@/components/ui/StageBadge';
 import { formatCurrency, formatTimeAgo } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 function SkeletonCard() {
   return <div className="card p-5 h-[120px] shimmer" />;
@@ -15,6 +16,7 @@ function SkeletonCard() {
 export default function OverviewPage({ params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = use(params);
   const { token } = useDashboardAuth();
+  const { t } = useI18n();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['overview', hotelId],
@@ -25,19 +27,19 @@ export default function OverviewPage({ params }: { params: Promise<{ hotelId: st
 
   if (error) return (
     <div className="p-6">
-      <div className="card p-6 border-rose/20 text-rose text-sm">Failed to load overview data.</div>
+      <div className="card p-6 border-rose/20 text-rose text-sm">{t('overview.failedToLoad')}</div>
     </div>
   );
 
   return (
     <div className="p-6 max-w-[1200px] animate-fade-in">
       <PageHeader
-        title="Overview"
-        subtitle="Today's activity at a glance"
+        title={t('overview.title')}
+        subtitle={t('overview.subtitle')}
         actions={
           <div className="flex items-center gap-2 text-xs text-ink-400">
             <span className="w-2 h-2 rounded-full bg-teal live-dot" />
-            Live · refreshes every 45s
+            {t('overview.liveRefresh')}
           </div>
         }
       />
@@ -49,30 +51,30 @@ export default function OverviewPage({ params }: { params: Promise<{ hotelId: st
         ) : (
           <>
             <StatCard
-              label="Guests Today"
+              label={t('overview.guestsToday')}
               value={data?.todayGuests ?? 0}
-              sub="new check-ins"
+              sub={t('overview.newCheckIns')}
               accent="gold"
               icon={<GuestIcon />}
             />
             <StatCard
-              label="Orders"
+              label={t('overview.orders')}
               value={data?.todayOrders ?? 0}
-              sub="room service"
+              sub={t('overview.roomService')}
               accent="teal"
               icon={<OrderIcon />}
             />
             <StatCard
-              label="Revenue"
+              label={t('overview.revenue')}
               value={formatCurrency(data?.todayRevenue ?? 0)}
-              sub="today"
+              sub={t('overview.today')}
               accent="blue"
               icon={<RevenueIcon />}
             />
             <StatCard
-              label="QR Scans"
+              label={t('overview.qrScans')}
               value={data?.todayQRScans ?? 0}
-              sub={`${data?.todaySMS ?? 0} SMS sent`}
+              sub={t('overview.smsSent', { n: data?.todaySMS ?? 0 })}
               accent="rose"
               icon={<QRScanIcon />}
             />
@@ -84,8 +86,8 @@ export default function OverviewPage({ params }: { params: Promise<{ hotelId: st
         {/* Recent Orders */}
         <div className="card">
           <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <h2 className="font-display font-700 text-sm text-white">Recent Orders</h2>
-            <a href={`/dashboard/${hotelId}/orders`} className="text-xs text-gold hover:text-gold-dim transition-colors">View all →</a>
+            <h2 className="font-display font-700 text-sm text-white">{t('overview.recentOrders')}</h2>
+            <a href={`/dashboard/${hotelId}/orders`} className="text-xs text-gold hover:text-gold-dim transition-colors">{t('overview.viewAll')}</a>
           </div>
           <div>
             {isLoading ? (
@@ -95,16 +97,16 @@ export default function OverviewPage({ params }: { params: Promise<{ hotelId: st
                 ))}
               </div>
             ) : !data?.recentOrders?.length ? (
-              <EmptyState message="No orders today" />
+              <EmptyState message={t('overview.noOrdersToday')} />
             ) : (
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Room</th>
-                    <th>Guest</th>
-                    <th>Items</th>
-                    <th>Status</th>
-                    <th className="text-right">Amount</th>
+                    <th>{t('overview.room')}</th>
+                    <th>{t('overview.guest')}</th>
+                    <th>{t('overview.items')}</th>
+                    <th>{t('overview.status')}</th>
+                    <th className="text-right">{t('overview.amount')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,8 +130,8 @@ export default function OverviewPage({ params }: { params: Promise<{ hotelId: st
         {/* Recent Stage Changes */}
         <div className="card">
           <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <h2 className="font-display font-700 text-sm text-white">Guest Journey Updates</h2>
-            <a href={`/dashboard/${hotelId}/guests`} className="text-xs text-gold hover:text-gold-dim transition-colors">View all →</a>
+            <h2 className="font-display font-700 text-sm text-white">{t('overview.guestJourneyUpdates')}</h2>
+            <a href={`/dashboard/${hotelId}/guests`} className="text-xs text-gold hover:text-gold-dim transition-colors">{t('overview.viewAll')}</a>
           </div>
           <div>
             {isLoading ? (
@@ -139,7 +141,7 @@ export default function OverviewPage({ params }: { params: Promise<{ hotelId: st
                 ))}
               </div>
             ) : !data?.recentGuestChanges?.length ? (
-              <EmptyState message="No stage changes today" />
+              <EmptyState message={t('overview.noStageChangesToday')} />
             ) : (
               <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
                 {data.recentGuestChanges.map((change, i) => (
@@ -152,7 +154,7 @@ export default function OverviewPage({ params }: { params: Promise<{ hotelId: st
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-white font-600 truncate">{change.guestName}</span>
                         {change.roomNumber && (
-                          <span className="text-xs text-ink-400 num">Rm {change.roomNumber}</span>
+                          <span className="text-xs text-ink-400 num">{t('common.rm')} {change.roomNumber}</span>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5">

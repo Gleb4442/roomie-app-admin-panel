@@ -9,16 +9,18 @@ import { Pagination } from '@/components/ui/Pagination';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import type { Order, OrderSSEEvent } from '@/types/dashboard';
 import toast from 'react-hot-toast';
+import { useI18n } from '@/lib/i18n';
 
 const STATUS_FILTERS = [
-  { value: 'all', label: 'All' },
-  { value: 'active', label: 'Active' },
-  { value: 'completed', label: 'Completed' },
+  { value: 'all', key: 'orders.all' },
+  { value: 'active', key: 'orders.active' },
+  { value: 'completed', key: 'orders.completed' },
 ];
 
 export default function OrdersPage({ params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = use(params);
   const { token } = useDashboardAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('active');
   const [page, setPage] = useState(1);
@@ -48,7 +50,7 @@ export default function OrdersPage({ params }: { params: Promise<{ hotelId: stri
       try {
         const event: OrderSSEEvent = JSON.parse(e.data);
         if (event.type === 'order_created') {
-          toast.success(`New order from Room ${event.order.roomNumber}`, { icon: '🛎️' });
+          toast.success(t('orders.newOrder', { room: event.order.roomNumber }), { icon: '🛎️' });
           qc.invalidateQueries({ queryKey: ['orders', hotelId] });
         } else if (event.type === 'order_status_changed') {
           qc.invalidateQueries({ queryKey: ['orders', hotelId] });
@@ -63,7 +65,7 @@ export default function OrdersPage({ params }: { params: Promise<{ hotelId: stri
       es.close();
       setTimeout(connectSSE, 5000);
     };
-  }, [token, hotelId, qc]);
+  }, [token, hotelId, qc, t]);
 
   useEffect(() => {
     connectSSE();
@@ -73,12 +75,12 @@ export default function OrdersPage({ params }: { params: Promise<{ hotelId: stri
   return (
     <div className="p-6 max-w-[1200px] animate-fade-in">
       <PageHeader
-        title="Orders"
-        subtitle="Room service & food orders"
+        title={t('orders.title')}
+        subtitle={t('orders.subtitle')}
         actions={
           <div className="flex items-center gap-2 text-xs">
             <span className={`w-2 h-2 rounded-full ${liveConnected ? 'bg-teal live-dot' : 'bg-rose'}`} />
-            <span className="text-ink-400">{liveConnected ? 'Live' : 'Reconnecting...'}</span>
+            <span className="text-ink-400">{liveConnected ? t('orders.live') : t('orders.reconnecting')}</span>
           </div>
         }
       />
@@ -96,7 +98,7 @@ export default function OrdersPage({ params }: { params: Promise<{ hotelId: stri
               border: `1px solid ${statusFilter === f.value ? 'rgba(240,165,0,0.2)' : 'transparent'}`,
             }}
           >
-            {f.label}
+            {t(f.key)}
           </button>
         ))}
       </div>
@@ -108,19 +110,19 @@ export default function OrdersPage({ params }: { params: Promise<{ hotelId: stri
             {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-12 shimmer rounded-lg" />)}
           </div>
         ) : !data?.orders?.length ? (
-          <div className="flex items-center justify-center h-40 text-ink-500 text-sm">No orders found</div>
+          <div className="flex items-center justify-center h-40 text-ink-500 text-sm">{t('orders.noOrders')}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Order #</th>
-                  <th>Room</th>
-                  <th>Guest</th>
-                  <th>Items</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Time</th>
+                  <th>{t('orders.orderNum')}</th>
+                  <th>{t('orders.room')}</th>
+                  <th>{t('orders.guest')}</th>
+                  <th>{t('orders.items')}</th>
+                  <th>{t('orders.total')}</th>
+                  <th>{t('orders.status')}</th>
+                  <th>{t('orders.time')}</th>
                 </tr>
               </thead>
               <tbody>

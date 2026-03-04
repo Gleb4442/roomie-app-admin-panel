@@ -4,20 +4,23 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AdminAuthProvider, useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useI18n } from '@/lib/i18n';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
 });
 
-const NAV = [
-  { href: '/admin', label: 'Hotels', exact: true, icon: HotelsIcon },
-  { href: '/admin/managers', label: 'Managers', icon: ManagersIcon },
-  { href: '/admin/monitoring', label: 'Monitoring', icon: MonitoringIcon },
-];
-
 function AdminSidebar() {
   const { username, logout } = useAdminAuth();
   const pathname = usePathname();
+  const { t } = useI18n();
+
+  const NAV = [
+    { href: '/admin', label: t('nav.hotels'), exact: true, icon: HotelsIcon },
+    { href: '/admin/managers', label: t('nav.managers'), icon: ManagersIcon },
+    { href: '/admin/monitoring', label: t('nav.monitoring'), icon: MonitoringIcon },
+  ];
 
   return (
     <aside className="w-[220px] shrink-0 h-screen sticky top-0 flex flex-col border-r"
@@ -56,8 +59,8 @@ function AdminSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-4 border-t" style={{ borderColor: 'rgba(244,63,94,0.08)' }}>
-        <div className="flex items-center gap-2.5 mb-3">
+      <div className="px-4 py-3 border-t" style={{ borderColor: 'rgba(244,63,94,0.08)' }}>
+        <div className="flex items-center gap-2.5 mb-2">
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-700 shrink-0"
             style={{ background: 'rgba(244,63,94,0.12)', color: '#F43F5E', fontFamily: 'var(--font-syne)' }}>
             {username?.[0]?.toUpperCase()}
@@ -67,12 +70,15 @@ function AdminSidebar() {
             <p className="text-[10px] text-ink-500 uppercase tracking-widest">Admin</p>
           </div>
         </div>
-        <button onClick={logout} className="w-full text-xs text-ink-400 hover:text-rose transition-colors py-1 flex items-center gap-1.5">
-          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
-          </svg>
-          Sign out
-        </button>
+        <div className="flex items-center justify-between">
+          <LanguageSwitcher accent="#F43F5E" />
+          <button onClick={logout} className="text-xs text-ink-400 hover:text-rose transition-colors py-1 flex items-center gap-1.5">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+            {t('nav.signOut')}
+          </button>
+        </div>
       </div>
     </aside>
   );

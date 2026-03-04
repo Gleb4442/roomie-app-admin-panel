@@ -3,11 +3,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminApi } from '@/lib/api/admin';
 import { AdminAuthProvider, useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useI18n } from '@/lib/i18n';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import toast from 'react-hot-toast';
 
 function AdminLoginForm() {
   const router = useRouter();
   const { login, isAuthenticated } = useAdminAuth();
+  const { t } = useI18n();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,10 +26,10 @@ function AdminLoginForm() {
     try {
       const data = await adminApi.login(username, password);
       login(data.token, data.username);
-      toast.success('Welcome back, Admin');
+      toast.success(t('adminLogin.welcomeBack'));
       router.push('/admin');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Login failed';
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? t('adminLogin.loginFailed');
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -44,6 +47,10 @@ function AdminLoginForm() {
       />
       <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(244,63,94,0.05) 0%, transparent 60%)' }} />
 
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher accent="#F43F5E" />
+      </div>
+
       <div className="relative z-10 w-full max-w-[400px] px-6">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 mb-6">
@@ -54,15 +61,15 @@ function AdminLoginForm() {
             </div>
             <span className="font-display text-xl font-700 text-white tracking-tight">Admin</span>
           </div>
-          <h1 className="font-display text-2xl font-700 text-white mb-2">HotelMol Control</h1>
-          <p className="text-ink-300 text-sm">Internal administration panel</p>
+          <h1 className="font-display text-2xl font-700 text-white mb-2">{t('adminLogin.title')}</h1>
+          <p className="text-ink-300 text-sm">{t('adminLogin.subtitle')}</p>
         </div>
 
         <div className="card p-6" style={{ borderColor: 'rgba(244,63,94,0.1)' }}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">
-                Username
+                {t('login.username')}
               </label>
               <input
                 type="text"
@@ -75,7 +82,7 @@ function AdminLoginForm() {
             </div>
             <div>
               <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">
-                Password
+                {t('login.password')}
               </label>
               <input
                 type="password"
@@ -103,15 +110,15 @@ function AdminLoginForm() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  Signing in...
+                  {t('adminLogin.signingIn')}
                 </span>
-              ) : 'Access Admin Panel'}
+              ) : t('adminLogin.access')}
             </button>
           </form>
         </div>
 
         <p className="text-center mt-6 text-xs text-ink-400">
-          <a href="/login" className="text-ink-300 hover:text-white transition-colors">← Hotel Dashboard</a>
+          <a href="/login" className="text-ink-300 hover:text-white transition-colors">{t('adminLogin.backToDashboard')}</a>
         </p>
       </div>
     </div>

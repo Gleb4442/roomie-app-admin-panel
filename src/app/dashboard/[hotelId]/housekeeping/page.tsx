@@ -4,6 +4,7 @@ import { use, useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDashboardAuth } from '@/contexts/DashboardAuthContext';
 import { dashboardApi, type Room, type RoomsBoardData, type HousekeepingStatus } from '@/lib/api/dashboard';
+import { useI18n } from '@/lib/i18n';
 
 // ── Status config ─────────────────────────────────────────────
 
@@ -19,15 +20,15 @@ const HK_STATUS: Record<HousekeepingStatus, { label: string; color: string; bg: 
 
 const STATUS_ORDER: HousekeepingStatus[] = ['DIRTY', 'CLEANING', 'CLEANED', 'INSPECTED', 'READY', 'DO_NOT_DISTURB', 'OUT_OF_ORDER'];
 
-function timeAgo(dateStr?: string | null): string {
+function timeAgo(dateStr: string | null | undefined, t: (key: string, vars?: Record<string, string | number>) => string): string {
   if (!dateStr) return '—';
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t('housekeeping.justNow');
+  if (mins < 60) return t('housekeeping.minutesAgo', { n: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  if (hrs < 24) return t('housekeeping.hoursAgo', { n: hrs });
+  return t('housekeeping.daysAgo', { n: Math.floor(hrs / 24) });
 }
 
 // ── Stat Card ─────────────────────────────────────────────────
@@ -45,6 +46,7 @@ function StatBadge({ label, value, status }: { label: string; value: number; sta
 // ── Room Card ─────────────────────────────────────────────────
 
 function RoomCard({ room, onClick }: { room: Room; onClick: () => void }) {
+  const { t } = useI18n();
   const cfg = HK_STATUS[room.housekeepingStatus];
   const cleanerName = room.assignedCleaner
     ? `${room.assignedCleaner.firstName} ${room.assignedCleaner.lastName ?? ''}`.trim()
@@ -76,7 +78,7 @@ function RoomCard({ room, onClick }: { room: Room; onClick: () => void }) {
         <span className="text-[10px] text-ink-400 mt-1 truncate max-w-full">{cleanerName}</span>
       )}
 
-      <span className="text-[10px] text-ink-500 mt-0.5">{timeAgo(room.lastStatusChangedAt)}</span>
+      <span className="text-[10px] text-ink-500 mt-0.5">{timeAgo(room.lastStatusChangedAt, t)}</span>
     </button>
   );
 }
@@ -97,6 +99,7 @@ function RoomPanel({
   onUpdate: () => void;
 }) {
   const { token } = useDashboardAuth();
+  const { t } = useI18n();
   const cfg = HK_STATUS[room.housekeepingStatus];
 
   const statusMutation = useMutation({
@@ -122,8 +125,8 @@ function RoomPanel({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h3 className="text-lg font-700 text-white font-display">Room {room.roomNumber}</h3>
-          <p className="text-xs text-ink-400">Floor {room.floor}{room.roomType ? ` · ${room.roomType}` : ''}</p>
+          <h3 className="text-lg font-700 text-white font-display">{t('housekeeping.roomLabel', { n: room.roomNumber })}</h3>
+          <p className="text-xs text-ink-400">{t('housekeeping.floorLabel', { n: room.floor })}{room.roomType ? ` · ${room.roomType}` : ''}</p>
         </div>
         <button onClick={onClose} className="text-ink-400 hover:text-white transition-colors p-1">
           <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -143,7 +146,7 @@ function RoomPanel({
 
       {/* Quick actions */}
       <div className="mb-5">
-        <p className="text-xs text-ink-400 uppercase tracking-wider mb-2 font-display">Set Status</p>
+        <p className="text-xs text-ink-400 uppercase tracking-wider mb-2 font-display">{t('housekeeping.setStatus')}</p>
         <div className="flex flex-wrap gap-1.5">
           {STATUS_ORDER.map(s => (
             <button
@@ -175,7 +178,7 @@ function RoomPanel({
             border: `1px solid ${room.isRush ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.06)'}`,
           }}
         >
-          {room.isRush ? '🔴 Rush ON' : 'Rush OFF'}
+          {room.isRush ? t('housekeeping.rushOn') : t('housekeeping.rushOff')}
         </button>
         <button
           onClick={() => dndMutation.mutate()}
@@ -186,20 +189,20 @@ function RoomPanel({
             border: `1px solid ${room.dndActive ? 'rgba(249,115,22,0.3)' : 'rgba(255,255,255,0.06)'}`,
           }}
         >
-          {room.dndActive ? '🔴 DND ON' : 'DND OFF'}
+          {room.dndActive ? t('housekeeping.dndOn') : t('housekeeping.dndOff')}
         </button>
       </div>
 
       {/* Assign cleaner */}
       <div className="mb-4">
-        <p className="text-xs text-ink-400 uppercase tracking-wider mb-2 font-display">Assign Cleaner</p>
+        <p className="text-xs text-ink-400 uppercase tracking-wider mb-2 font-display">{t('housekeeping.assignCleaner')}</p>
         <select
           className="w-full text-sm py-2 px-3 rounded-lg"
           style={{ background: '#1C2230', border: '1px solid rgba(255,255,255,0.08)', color: '#E2E8F0' }}
           value={room.assignedCleanerId ?? ''}
           onChange={e => assignMutation.mutate({ staffId: e.target.value || null })}
         >
-          <option value="">— Unassigned —</option>
+          <option value="">{t('housekeeping.unassigned')}</option>
           {staffList.map(s => (
             <option key={s.id} value={s.id}>{s.firstName} {s.lastName ?? ''}</option>
           ))}
@@ -208,14 +211,14 @@ function RoomPanel({
 
       {/* Assign inspector */}
       <div className="mb-5">
-        <p className="text-xs text-ink-400 uppercase tracking-wider mb-2 font-display">Assign Inspector</p>
+        <p className="text-xs text-ink-400 uppercase tracking-wider mb-2 font-display">{t('housekeeping.assignInspector')}</p>
         <select
           className="w-full text-sm py-2 px-3 rounded-lg"
           style={{ background: '#1C2230', border: '1px solid rgba(255,255,255,0.08)', color: '#E2E8F0' }}
           value={room.assignedInspectorId ?? ''}
           onChange={e => assignMutation.mutate({ inspectorId: e.target.value || null })}
         >
-          <option value="">— Unassigned —</option>
+          <option value="">{t('housekeeping.unassigned')}</option>
           {staffList.map(s => (
             <option key={s.id} value={s.id}>{s.firstName} {s.lastName ?? ''}</option>
           ))}
@@ -224,10 +227,10 @@ function RoomPanel({
 
       {/* Info */}
       <div className="rounded-lg p-3 space-y-1.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <InfoRow label="Last cleaned" value={timeAgo(room.lastCleanedAt)} />
-        <InfoRow label="Last inspected" value={timeAgo(room.lastInspectedAt)} />
-        <InfoRow label="Status changed" value={timeAgo(room.lastStatusChangedAt)} />
-        <InfoRow label="Occupancy" value={room.occupancyStatus} />
+        <InfoRow label={t('housekeeping.lastCleaned')} value={timeAgo(room.lastCleanedAt, t)} />
+        <InfoRow label={t('housekeeping.lastInspected')} value={timeAgo(room.lastInspectedAt, t)} />
+        <InfoRow label={t('housekeeping.statusChanged')} value={timeAgo(room.lastStatusChangedAt, t)} />
+        <InfoRow label={t('housekeeping.occupancy')} value={room.occupancyStatus} />
       </div>
     </div>
   );
@@ -248,6 +251,7 @@ export default function HousekeepingPage({ params }: { params: Promise<{ hotelId
   const { hotelId } = use(params);
   const { token } = useDashboardAuth();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const [view, setView] = useState<'board' | 'list'>('board');
   const [floorFilter, setFloorFilter] = useState<number | undefined>(undefined);
@@ -331,7 +335,7 @@ export default function HousekeepingPage({ params }: { params: Promise<{ hotelId
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-ink-400 text-sm">Loading rooms...</div>
+        <div className="text-ink-400 text-sm">{t('housekeeping.loadingRooms')}</div>
       </div>
     );
   }
@@ -342,18 +346,18 @@ export default function HousekeepingPage({ params }: { params: Promise<{ hotelId
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <h1 className="text-xl font-700 text-white font-display mb-4">Housekeeping Board</h1>
+          <h1 className="text-xl font-700 text-white font-display mb-4">{t('housekeeping.title')}</h1>
 
           {/* Stats bar */}
           {stats && (
             <div className="flex gap-3 flex-wrap mb-4">
-              <StatBadge label="Dirty" value={stats.dirty} status="DIRTY" />
-              <StatBadge label="Cleaning" value={stats.cleaning} status="CLEANING" />
-              <StatBadge label="Cleaned" value={stats.cleaned} status="CLEANED" />
-              <StatBadge label="Inspected" value={stats.inspected} status="INSPECTED" />
-              <StatBadge label="Ready" value={stats.ready} status="READY" />
-              {stats.dnd > 0 && <StatBadge label="DND" value={stats.dnd} status="DO_NOT_DISTURB" />}
-              {stats.outOfOrder > 0 && <StatBadge label="OOO" value={stats.outOfOrder} status="OUT_OF_ORDER" />}
+              <StatBadge label={HK_STATUS.DIRTY.label} value={stats.dirty} status="DIRTY" />
+              <StatBadge label={HK_STATUS.CLEANING.label} value={stats.cleaning} status="CLEANING" />
+              <StatBadge label={HK_STATUS.CLEANED.label} value={stats.cleaned} status="CLEANED" />
+              <StatBadge label={HK_STATUS.INSPECTED.label} value={stats.inspected} status="INSPECTED" />
+              <StatBadge label={HK_STATUS.READY.label} value={stats.ready} status="READY" />
+              {stats.dnd > 0 && <StatBadge label={HK_STATUS.DO_NOT_DISTURB.label} value={stats.dnd} status="DO_NOT_DISTURB" />}
+              {stats.outOfOrder > 0 && <StatBadge label={HK_STATUS.OUT_OF_ORDER.label} value={stats.outOfOrder} status="OUT_OF_ORDER" />}
             </div>
           )}
 
@@ -371,7 +375,7 @@ export default function HousekeepingPage({ params }: { params: Promise<{ hotelId
                     color: view === v ? '#000' : '#94A3B8',
                   }}
                 >
-                  {v}
+                  {t(`housekeeping.${v}`)}
                 </button>
               ))}
             </div>
@@ -387,7 +391,7 @@ export default function HousekeepingPage({ params }: { params: Promise<{ hotelId
                   border: `1px solid ${floorFilter === undefined ? 'rgba(240,165,0,0.3)' : 'rgba(255,255,255,0.06)'}`,
                 }}
               >
-                All floors
+                {t('housekeeping.allFloors')}
               </button>
               {floors.map(f => (
                 <button
@@ -413,7 +417,7 @@ export default function HousekeepingPage({ params }: { params: Promise<{ hotelId
                 className="text-xs py-1.5 px-2 rounded-lg"
                 style={{ background: '#1C2230', border: '1px solid rgba(255,255,255,0.1)', color: '#94A3B8' }}
               >
-                <option value="">All statuses</option>
+                <option value="">{t('housekeeping.allStatuses')}</option>
                 {STATUS_ORDER.map(s => (
                   <option key={s} value={s}>{HK_STATUS[s].label}</option>
                 ))}
@@ -434,8 +438,8 @@ export default function HousekeepingPage({ params }: { params: Promise<{ hotelId
                   return (
                     <div key={floor}>
                       <div className="flex items-center gap-3 mb-3">
-                        <h2 className="text-sm font-700 text-white font-display">Floor {floor}</h2>
-                        <span className="text-xs text-ink-500">{rooms.length} rooms</span>
+                        <h2 className="text-sm font-700 text-white font-display">{t('housekeeping.floor', { n: floor })}</h2>
+                        <span className="text-xs text-ink-500">{t('housekeeping.rooms', { n: rooms.length })}</span>
                         {/* Floor status summary */}
                         <div className="flex gap-1.5">
                           {STATUS_ORDER.map(s => {
@@ -507,8 +511,8 @@ export default function HousekeepingPage({ params }: { params: Promise<{ hotelId
                         <Td className="text-ink-300 text-xs">
                           {room.assignedCleaner ? `${room.assignedCleaner.firstName} ${room.assignedCleaner.lastName ?? ''}`.trim() : '—'}
                         </Td>
-                        <Td className="text-ink-400 text-xs">{timeAgo(room.lastCleanedAt)}</Td>
-                        <Td className="text-ink-400 text-xs">{timeAgo(room.lastStatusChangedAt)}</Td>
+                        <Td className="text-ink-400 text-xs">{timeAgo(room.lastCleanedAt, t)}</Td>
+                        <Td className="text-ink-400 text-xs">{timeAgo(room.lastStatusChangedAt, t)}</Td>
                         <Td>
                           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#64748B" strokeWidth="2">
                             <path d="M9 18l6-6-6-6"/>
@@ -519,7 +523,7 @@ export default function HousekeepingPage({ params }: { params: Promise<{ hotelId
                   })}
                   {allRooms.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="text-center text-ink-500 text-sm py-12">No rooms found</td>
+                      <td colSpan={8} className="text-center text-ink-500 text-sm py-12">{t('housekeeping.noRooms')}</td>
                     </tr>
                   )}
                 </tbody>
@@ -558,6 +562,7 @@ function Td({ children, className }: { children?: React.ReactNode; className?: s
 }
 
 function EmptyState() {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-4"
@@ -566,8 +571,8 @@ function EmptyState() {
           <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>
         </svg>
       </div>
-      <p className="text-sm font-600 text-white mb-1">No rooms configured</p>
-      <p className="text-xs text-ink-400 max-w-48">Use the API to bulk-create rooms for this hotel.</p>
+      <p className="text-sm font-600 text-white mb-1">{t('housekeeping.noRoomsConfigured')}</p>
+      <p className="text-xs text-ink-400 max-w-48">{t('housekeeping.noRoomsHint')}</p>
     </div>
   );
 }

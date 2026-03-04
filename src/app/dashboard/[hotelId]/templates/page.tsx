@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDashboardAuth } from '@/contexts/DashboardAuthContext';
 import { dashboardApi, type TaskTemplate, type TemplateFormData, type ChecklistItemData } from '@/lib/api/dashboard';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useI18n } from '@/lib/i18n';
 
 const DEPARTMENTS = ['HOUSEKEEPING', 'MAINTENANCE', 'FOOD_AND_BEVERAGE', 'FRONT_OFFICE', 'SECURITY', 'MANAGEMENT'];
 const PRIORITIES = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
@@ -39,6 +40,7 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
   const { hotelId } = use(params);
   const { token } = useDashboardAuth();
   const qc = useQueryClient();
+  const { t } = useI18n();
 
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState<TaskTemplate | null>(null);
@@ -75,15 +77,15 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
     setShowModal(true);
   }
 
-  function openEdit(t: TaskTemplate) {
-    setEditTarget(t);
+  function openEdit(tmpl: TaskTemplate) {
+    setEditTarget(tmpl);
     setForm({
-      name: t.name,
-      department: t.department,
-      defaultPriority: t.defaultPriority,
-      slaMinutes: t.slaMinutes ?? undefined,
-      isActive: t.isActive,
-      checklistItems: t.checklistItems.map(i => ({
+      name: tmpl.name,
+      department: tmpl.department,
+      defaultPriority: tmpl.defaultPriority,
+      slaMinutes: tmpl.slaMinutes ?? undefined,
+      isActive: tmpl.isActive,
+      checklistItems: tmpl.checklistItems.map(i => ({
         text: i.text,
         isRequired: i.isRequired,
         sortOrder: i.sortOrder,
@@ -133,14 +135,14 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
     }
   }
 
-  const filtered = templates.filter(t => !filterDept || t.department === filterDept);
+  const filtered = templates.filter(tmpl => !filterDept || tmpl.department === filterDept);
   const isPending = createMut.isPending || updateMut.isPending;
 
   return (
     <div className="p-6 max-w-[1200px] animate-fade-in">
       <PageHeader
-        title="Task Templates"
-        subtitle="Pre-configured task templates with checklists for common hotel operations"
+        title={t('templates.title')}
+        subtitle={t('templates.subtitle')}
         actions={
           <button
             onClick={openCreate}
@@ -148,7 +150,7 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
             style={{ background: 'rgba(240,165,0,0.12)', color: '#F0A500', border: '1px solid rgba(240,165,0,0.2)' }}
           >
             <span style={{ fontSize: 18, lineHeight: 1 }}>+</span>
-            New Template
+            {t('templates.newTemplate')}
           </button>
         }
       />
@@ -164,7 +166,7 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
             border: `1px solid ${!filterDept ? 'rgba(240,165,0,0.2)' : 'transparent'}`,
           }}
         >
-          All
+          {t('templates.all')}
         </button>
         {DEPARTMENTS.map(d => (
           <button
@@ -191,27 +193,27 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
       ) : filtered.length === 0 ? (
         <div className="card flex flex-col items-center justify-center py-16 gap-3">
           <span style={{ fontSize: 40 }}>📋</span>
-          <p className="text-sm text-ink-400">No templates yet. Create one to speed up task creation.</p>
+          <p className="text-sm text-ink-400">{t('templates.noTemplates')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(t => (
+          {filtered.map(tmpl => (
             <div
-              key={t.id}
+              key={tmpl.id}
               className="card p-4 flex flex-col gap-3"
-              style={{ opacity: t.isActive ? 1 : 0.5 }}
+              style={{ opacity: tmpl.isActive ? 1 : 0.5 }}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span style={{ fontSize: 20 }}>{DEPT_ICON[t.department] ?? '📋'}</span>
+                  <span style={{ fontSize: 20 }}>{DEPT_ICON[tmpl.department] ?? '📋'}</span>
                   <div>
-                    <p className="text-sm font-600 text-white">{t.name}</p>
-                    <p className="text-xs text-ink-400">{t.department.replace(/_/g, ' ')}</p>
+                    <p className="text-sm font-600 text-white">{tmpl.name}</p>
+                    <p className="text-xs text-ink-400">{tmpl.department.replace(/_/g, ' ')}</p>
                   </div>
                 </div>
-                {!t.isActive && (
+                {!tmpl.isActive && (
                   <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(100,116,139,0.15)', color: '#64748B' }}>
-                    Inactive
+                    {t('templates.inactive')}
                   </span>
                 )}
               </div>
@@ -220,22 +222,22 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
               <div className="flex items-center gap-3">
                 <span
                   className="text-xs px-2 py-0.5 rounded font-600"
-                  style={{ background: `${PRIORITY_COLOR[t.defaultPriority]}15`, color: PRIORITY_COLOR[t.defaultPriority] }}
+                  style={{ background: `${PRIORITY_COLOR[tmpl.defaultPriority]}15`, color: PRIORITY_COLOR[tmpl.defaultPriority] }}
                 >
-                  {t.defaultPriority}
+                  {tmpl.defaultPriority}
                 </span>
-                {t.slaMinutes && (
-                  <span className="text-xs text-ink-400">⏱ {t.slaMinutes}m SLA</span>
+                {tmpl.slaMinutes && (
+                  <span className="text-xs text-ink-400">⏱ {tmpl.slaMinutes}m SLA</span>
                 )}
-                {t.checklistItems.length > 0 && (
-                  <span className="text-xs text-ink-400">☑ {t.checklistItems.length} steps</span>
+                {tmpl.checklistItems.length > 0 && (
+                  <span className="text-xs text-ink-400">☑ {t('templates.steps', { n: tmpl.checklistItems.length })}</span>
                 )}
               </div>
 
               {/* Checklist preview */}
-              {t.checklistItems.length > 0 && (
+              {tmpl.checklistItems.length > 0 && (
                 <div className="space-y-1 pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                  {t.checklistItems.slice(0, 3).map((item, i) => (
+                  {tmpl.checklistItems.slice(0, 3).map((item, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <div
                         className="w-3.5 h-3.5 rounded shrink-0"
@@ -247,8 +249,8 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
                       )}
                     </div>
                   ))}
-                  {t.checklistItems.length > 3 && (
-                    <p className="text-xs text-ink-500">+{t.checklistItems.length - 3} more</p>
+                  {tmpl.checklistItems.length > 3 && (
+                    <p className="text-xs text-ink-500">+{tmpl.checklistItems.length - 3} more</p>
                   )}
                 </div>
               )}
@@ -256,20 +258,20 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
               {/* Actions */}
               <div className="flex gap-2 mt-auto pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                 <button
-                  onClick={() => openEdit(t)}
+                  onClick={() => openEdit(tmpl)}
                   className="flex-1 py-1.5 rounded text-xs font-600 text-ink-300 hover:text-white transition-colors"
                   style={{ background: 'rgba(255,255,255,0.05)' }}
                 >
-                  Edit
+                  {t('templates.edit')}
                 </button>
                 <button
                   onClick={() => {
-                    if (confirm(`Delete template "${t.name}"?`)) deleteMut.mutate(t.id);
+                    if (confirm(t('templates.deleteConfirm', { name: tmpl.name }))) deleteMut.mutate(tmpl.id);
                   }}
                   className="px-3 py-1.5 rounded text-xs font-600 transition-colors"
                   style={{ background: 'rgba(244,63,94,0.08)', color: '#F43F5E' }}
                 >
-                  Delete
+                  {t('templates.deleteBtn')}
                 </button>
               </div>
             </div>
@@ -283,13 +285,13 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
           <div className="card w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-700 font-display text-white">
-                {editTarget ? 'Edit Template' : 'New Template'}
+                {editTarget ? t('templates.editTemplate') : t('templates.newTemplate')}
               </h2>
               <button onClick={closeModal} className="text-ink-400 hover:text-white text-xl leading-none">×</button>
             </div>
 
             <div>
-              <label className="text-xs text-ink-400 mb-1 block">Template Name *</label>
+              <label className="text-xs text-ink-400 mb-1 block">{t('templates.nameLabel')}</label>
               <input
                 className="w-full text-sm"
                 style={inputStyle}
@@ -301,7 +303,7 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-ink-400 mb-1 block">Department *</label>
+                <label className="text-xs text-ink-400 mb-1 block">{t('templates.departmentLabel')}</label>
                 <select
                   className="w-full text-sm"
                   style={inputStyle}
@@ -312,7 +314,7 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
                 </select>
               </div>
               <div>
-                <label className="text-xs text-ink-400 mb-1 block">Default Priority</label>
+                <label className="text-xs text-ink-400 mb-1 block">{t('templates.defaultPriority')}</label>
                 <select
                   className="w-full text-sm"
                   style={inputStyle}
@@ -326,7 +328,7 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-ink-400 mb-1 block">SLA (minutes)</label>
+                <label className="text-xs text-ink-400 mb-1 block">{t('templates.slaMinutes')}</label>
                 <input
                   type="number"
                   className="w-full text-sm"
@@ -339,15 +341,15 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
               </div>
               {editTarget && (
                 <div>
-                  <label className="text-xs text-ink-400 mb-1 block">Status</label>
+                  <label className="text-xs text-ink-400 mb-1 block">{t('templates.statusLabel')}</label>
                   <select
                     className="w-full text-sm"
                     style={inputStyle}
                     value={form.isActive ? 'active' : 'inactive'}
                     onChange={e => setForm(f => ({ ...f, isActive: e.target.value === 'active' }))}
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="active">{t('staff.activeStatus')}</option>
+                    <option value="inactive">{t('staff.inactiveStatus')}</option>
                   </select>
                 </div>
               )}
@@ -356,7 +358,7 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
             {/* Checklist items */}
             <div>
               <label className="text-xs text-ink-400 mb-2 block">
-                Checklist Steps <span className="text-ink-500">({form.checklistItems.length})</span>
+                {t('templates.checklistSteps')} <span className="text-ink-500">({form.checklistItems.length})</span>
               </label>
 
               {form.checklistItems.length > 0 && (
@@ -372,9 +374,9 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
                           background: item.isRequired ? 'rgba(244,63,94,0.12)' : 'rgba(255,255,255,0.05)',
                           color: item.isRequired ? '#F43F5E' : '#64748B',
                         }}
-                        title={item.isRequired ? 'Required' : 'Optional'}
+                        title={item.isRequired ? t('templates.required') : t('templates.optional')}
                       >
-                        {item.isRequired ? 'Required' : 'Optional'}
+                        {item.isRequired ? t('templates.required') : t('templates.optional')}
                       </button>
                       <button
                         onClick={() => removeChecklistItem(idx)}
@@ -394,7 +396,7 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
                   value={newItemText}
                   onChange={e => setNewItemText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addChecklistItem()}
-                  placeholder="Add checklist step…"
+                  placeholder={t('templates.addStep')}
                 />
                 <button
                   onClick={addChecklistItem}
@@ -405,14 +407,14 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
                     color: newItemText.trim() ? '#F0A500' : '#475569',
                   }}
                 >
-                  Add
+                  {t('templates.add')}
                 </button>
               </div>
-              <p className="text-xs text-ink-500 mt-1">Press Enter or click Add. Click Required/Optional to toggle.</p>
+              <p className="text-xs text-ink-500 mt-1">{t('templates.pressEnter')}</p>
             </div>
 
             {(createMut.isError || updateMut.isError) && (
-              <p className="text-xs" style={{ color: '#F43F5E' }}>Failed to save template</p>
+              <p className="text-xs" style={{ color: '#F43F5E' }}>{t('templates.failedSave')}</p>
             )}
 
             <div className="flex gap-2 pt-1">
@@ -421,7 +423,7 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
                 className="flex-1 py-2 rounded-lg text-sm text-ink-300"
                 style={{ background: 'rgba(255,255,255,0.05)' }}
               >
-                Cancel
+                {t('templates.cancel')}
               </button>
               <button
                 onClick={submit}
@@ -429,7 +431,7 @@ export default function TemplatesPage({ params }: { params: Promise<{ hotelId: s
                 className="flex-1 py-2 rounded-lg text-sm font-600"
                 style={{ background: '#F0A500', color: '#0D1117', opacity: isPending || !form.name ? 0.6 : 1 }}
               >
-                {isPending ? 'Saving…' : editTarget ? 'Save Changes' : 'Create Template'}
+                {isPending ? t('templates.saving') : editTarget ? t('templates.saveChanges') : t('templates.createTemplate')}
               </button>
             </div>
           </div>

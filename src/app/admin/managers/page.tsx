@@ -6,10 +6,12 @@ import { adminApi } from '@/lib/api/admin';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { formatDate } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { useI18n } from '@/lib/i18n';
 
 export default function ManagersPage() {
   const { token } = useAdminAuth();
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ username: '', password: '', role: 'manager' });
@@ -36,9 +38,9 @@ export default function ManagersPage() {
       qc.invalidateQueries({ queryKey: ['admin-managers'] });
       setShowCreate(false);
       setForm({ username: '', password: '', role: 'manager' });
-      toast.success('Manager created');
+      toast.success(t('adminManagers.created'));
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Failed to create manager';
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? t('adminManagers.failedCreate');
       toast.error(msg);
     } finally {
       setCreating(false);
@@ -46,12 +48,12 @@ export default function ManagersPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete manager "${name}"?`)) return;
+    if (!confirm(t('adminManagers.deleteConfirm', { name }))) return;
     try {
       await adminApi.deleteManager(token!, id);
       qc.invalidateQueries({ queryKey: ['admin-managers'] });
-      toast.success('Manager deleted');
-    } catch { toast.error('Delete failed'); }
+      toast.success(t('adminManagers.deleted'));
+    } catch { toast.error(t('adminManagers.deleteFailed')); }
   };
 
   const handleLinkHotels = async () => {
@@ -60,8 +62,8 @@ export default function ManagersPage() {
       await adminApi.linkManagerHotels(token!, linkModal.managerId, selectedHotels);
       qc.invalidateQueries({ queryKey: ['admin-managers'] });
       setLinkModal(null);
-      toast.success('Hotel access updated');
-    } catch { toast.error('Update failed'); }
+      toast.success(t('adminManagers.hotelAccessUpdated'));
+    } catch { toast.error(t('adminManagers.updateFailed')); }
   };
 
   const openLinkModal = (m: { id: string; username: string; hotels: Array<{ id: string }> }) => {
@@ -72,8 +74,8 @@ export default function ManagersPage() {
   return (
     <div className="p-6 max-w-[900px] animate-fade-in">
       <PageHeader
-        title="Managers"
-        subtitle="GM accounts & hotel access"
+        title={t('adminManagers.title')}
+        subtitle={t('adminManagers.subtitle')}
         actions={
           <button onClick={() => setShowCreate(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-600 font-display"
@@ -81,7 +83,7 @@ export default function ManagersPage() {
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            New Manager
+            {t('adminManagers.newManager')}
           </button>
         }
       />
@@ -90,12 +92,12 @@ export default function ManagersPage() {
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
           <div className="card w-full max-w-[420px] mx-4 p-6 animate-slide-up">
-            <h2 className="font-display font-700 text-white mb-5">Create Manager</h2>
+            <h2 className="font-display font-700 text-white mb-5">{t('adminManagers.createManager')}</h2>
             <form onSubmit={handleCreate} className="space-y-4">
-              <Field label="Username" value={form.username} onChange={v => setForm(f => ({ ...f, username: v }))} placeholder="gm_kyiv" required />
-              <Field label="Password" value={form.password} onChange={v => setForm(f => ({ ...f, password: v }))} placeholder="••••••••" type="password" required />
+              <Field label={t('adminManagers.username')} value={form.username} onChange={v => setForm(f => ({ ...f, username: v }))} placeholder="gm_kyiv" required />
+              <Field label={t('adminManagers.password')} value={form.password} onChange={v => setForm(f => ({ ...f, password: v }))} placeholder="••••••••" type="password" required />
               <div>
-                <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">Role</label>
+                <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">{t('adminManagers.roleLabel')}</label>
                 <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
                   <option value="manager">Manager</option>
                   <option value="admin">Admin</option>
@@ -104,11 +106,11 @@ export default function ManagersPage() {
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowCreate(false)}
                   className="flex-1 h-10 rounded-lg text-sm font-600 font-display text-ink-300"
-                  style={{ background: 'rgba(255,255,255,0.05)' }}>Cancel</button>
+                  style={{ background: 'rgba(255,255,255,0.05)' }}>{t('adminManagers.cancel')}</button>
                 <button type="submit" disabled={creating}
                   className="flex-1 h-10 rounded-lg text-sm font-600 font-display text-white"
                   style={{ background: creating ? 'rgba(244,63,94,0.4)' : 'linear-gradient(135deg, #F43F5E, #FF6B8A)' }}>
-                  {creating ? 'Creating...' : 'Create'}
+                  {creating ? t('adminManagers.creating') : t('adminManagers.create')}
                 </button>
               </div>
             </form>
@@ -120,7 +122,7 @@ export default function ManagersPage() {
       {linkModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
           <div className="card w-full max-w-[420px] mx-4 p-6 animate-slide-up">
-            <h2 className="font-display font-700 text-white mb-1">Hotel Access</h2>
+            <h2 className="font-display font-700 text-white mb-1">{t('adminManagers.hotelAccess')}</h2>
             <p className="text-xs text-ink-400 mb-4">{linkModal.name}</p>
             <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
               {hotels?.map(h => (
@@ -132,14 +134,15 @@ export default function ManagersPage() {
                   <span className="text-sm text-white">{h.name}</span>
                 </label>
               ))}
+              {!hotels?.length && <p className="text-sm text-ink-500 text-center py-4">{t('adminManagers.noHotels')}</p>}
             </div>
             <div className="flex gap-3">
               <button onClick={() => setLinkModal(null)}
                 className="flex-1 h-10 rounded-lg text-sm font-600 font-display text-ink-300"
-                style={{ background: 'rgba(255,255,255,0.05)' }}>Cancel</button>
+                style={{ background: 'rgba(255,255,255,0.05)' }}>{t('adminManagers.cancel')}</button>
               <button onClick={handleLinkHotels}
                 className="flex-1 h-10 rounded-lg text-sm font-600 font-display text-white"
-                style={{ background: 'linear-gradient(135deg, #F43F5E, #FF6B8A)' }}>Save</button>
+                style={{ background: 'linear-gradient(135deg, #F43F5E, #FF6B8A)' }}>{t('adminManagers.save')}</button>
             </div>
           </div>
         </div>
@@ -151,12 +154,18 @@ export default function ManagersPage() {
           {Array.from({ length: 4 }).map((_, i) => <div key={i} className="card h-[72px] shimmer" />)}
         </div>
       ) : !managers?.length ? (
-        <div className="card flex items-center justify-center h-40 text-ink-500 text-sm">No managers yet</div>
+        <div className="card flex items-center justify-center h-40 text-ink-500 text-sm">{t('adminManagers.noManagers')}</div>
       ) : (
         <div className="card overflow-hidden">
           <table className="data-table">
             <thead>
-              <tr><th>Username</th><th>Role</th><th>Hotels</th><th>Created</th><th></th></tr>
+              <tr>
+                <th>{t('adminManagers.usernameCol')}</th>
+                <th>{t('adminManagers.roleCol')}</th>
+                <th>{t('adminManagers.hotelsCol')}</th>
+                <th>{t('adminManagers.createdCol')}</th>
+                <th></th>
+              </tr>
             </thead>
             <tbody>
               {managers.map(m => (
@@ -181,14 +190,14 @@ export default function ManagersPage() {
                         <span key={h.id} className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)', color: '#94A3B8' }}>{h.name}</span>
                       ))}
                       {m.hotels?.length > 3 && <span className="text-xs text-ink-500">+{m.hotels.length - 3}</span>}
-                      {!m.hotels?.length && <span className="text-xs text-ink-500">No hotels</span>}
+                      {!m.hotels?.length && <span className="text-xs text-ink-500">{t('adminManagers.noHotels')}</span>}
                     </div>
                   </td>
                   <td className="text-ink-400 num text-xs">{formatDate(m.createdAt)}</td>
                   <td>
                     <div className="flex gap-2">
                       <button onClick={() => openLinkModal(m)}
-                        className="text-xs text-gold hover:text-gold-dim transition-colors">Hotels</button>
+                        className="text-xs text-gold hover:text-gold-dim transition-colors">{t('adminManagers.hotels')}</button>
                       <button onClick={() => handleDelete(m.id, m.username)}
                         className="text-ink-500 hover:text-rose transition-colors ml-1">
                         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

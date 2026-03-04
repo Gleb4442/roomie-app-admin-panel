@@ -3,16 +3,18 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { dashboardApi } from '@/lib/api/dashboard';
 import { DashboardAuthProvider, useDashboardAuth } from '@/contexts/DashboardAuthContext';
+import { useI18n } from '@/lib/i18n';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import toast from 'react-hot-toast';
 
 function LoginForm() {
   const router = useRouter();
   const { login, isAuthenticated, manager } = useDashboardAuth();
+  const { t } = useI18n();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in
   if (isAuthenticated && manager?.hotels[0]) {
     router.replace(`/dashboard/${manager.hotels[0].id}`);
     return null;
@@ -25,12 +27,12 @@ function LoginForm() {
     try {
       const data = await dashboardApi.login(username, password);
       login(data.token, data.manager);
-      toast.success(`Welcome, ${data.manager.username}`);
+      toast.success(t('login.welcome', { name: data.manager.username }));
       if (data.manager.hotels.length > 0) {
         router.push(`/dashboard/${data.manager.hotels[0].id}`);
       }
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Login failed';
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? t('login.loginFailed');
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -47,10 +49,14 @@ function LoginForm() {
           backgroundSize: '40px 40px',
         }}
       />
-      {/* Radial glow */}
       <div className="absolute inset-0 bg-gradient-radial from-[rgba(240,165,0,0.04)] via-transparent to-transparent"
         style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(240,165,0,0.06) 0%, transparent 60%)' }}
       />
+
+      {/* Language switcher top-right */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
 
       <div className="relative z-10 w-full max-w-[400px] px-6">
         {/* Logo */}
@@ -64,8 +70,8 @@ function LoginForm() {
             </div>
             <span className="font-display text-xl font-700 text-white tracking-tight">HotelMol</span>
           </div>
-          <h1 className="font-display text-2xl font-700 text-white mb-2">Hotel Dashboard</h1>
-          <p className="text-ink-300 text-sm">Sign in to manage your property</p>
+          <h1 className="font-display text-2xl font-700 text-white mb-2">{t('login.title')}</h1>
+          <p className="text-ink-300 text-sm">{t('login.subtitle')}</p>
         </div>
 
         {/* Card */}
@@ -73,7 +79,7 @@ function LoginForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">
-                Username
+                {t('login.username')}
               </label>
               <input
                 type="text"
@@ -86,7 +92,7 @@ function LoginForm() {
             </div>
             <div>
               <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">
-                Password
+                {t('login.password')}
               </label>
               <input
                 type="password"
@@ -114,18 +120,18 @@ function LoginForm() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  Signing in...
+                  {t('login.signingIn')}
                 </span>
-              ) : 'Sign In'}
+              ) : t('login.signIn')}
             </button>
           </form>
         </div>
 
         {/* Admin link */}
         <p className="text-center mt-6 text-xs text-ink-400">
-          HotelMol team?{' '}
+          {t('login.adminLink')}{' '}
           <a href="/admin/login" className="text-gold hover:text-gold-dim transition-colors">
-            Admin Panel →
+            {t('login.adminLinkAnchor')}
           </a>
         </p>
       </div>

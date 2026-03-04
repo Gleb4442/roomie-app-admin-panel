@@ -9,14 +9,15 @@ import { Pagination } from '@/components/ui/Pagination';
 import { formatCurrency, formatTimeAgo } from '@/lib/utils';
 import type { ServiceRequest, ServiceRequestStatus } from '@/types/dashboard';
 import toast from 'react-hot-toast';
+import { useI18n } from '@/lib/i18n';
 
-const STATUSES: { value: string; label: string }[] = [
-  { value: '', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'accepted', label: 'Accepted' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'rejected', label: 'Rejected' },
+const STATUSES: { value: string; key: string }[] = [
+  { value: '', key: 'services.all' },
+  { value: 'pending', key: 'services.pending' },
+  { value: 'accepted', key: 'services.accepted' },
+  { value: 'in_progress', key: 'services.inProgress' },
+  { value: 'completed', key: 'services.completed' },
+  { value: 'rejected', key: 'services.rejected' },
 ];
 
 const NEXT_STATUS: Record<ServiceRequestStatus, ServiceRequestStatus | null> = {
@@ -27,15 +28,16 @@ const NEXT_STATUS: Record<ServiceRequestStatus, ServiceRequestStatus | null> = {
   rejected: null,
 };
 
-const NEXT_LABEL: Record<string, string> = {
-  pending: 'Accept',
-  accepted: 'Start',
-  in_progress: 'Complete',
+const NEXT_LABEL_KEY: Record<string, string> = {
+  pending: 'services.accept',
+  accepted: 'services.start',
+  in_progress: 'services.complete',
 };
 
 export default function ServicesPage({ params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = use(params);
   const { token } = useDashboardAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('pending');
   const [page, setPage] = useState(1);
@@ -69,7 +71,7 @@ export default function ServicesPage({ params }: { params: Promise<{ hotelId: st
       try {
         const event = JSON.parse(e.data);
         if (event.type === 'request_created') {
-          toast.success(`New service request from Room ${event.request?.roomNumber ?? '—'}`, { icon: '🔔' });
+          toast.success(t('services.newRequest', { room: event.request?.roomNumber ?? '—' }), { icon: '🔔' });
           qc.invalidateQueries({ queryKey: ['service-requests', hotelId] });
           qc.invalidateQueries({ queryKey: ['service-stats', hotelId] });
         } else {
@@ -82,7 +84,7 @@ export default function ServicesPage({ params }: { params: Promise<{ hotelId: st
       es.close();
       setTimeout(connectSSE, 5000);
     };
-  }, [token, hotelId, qc]);
+  }, [token, hotelId, qc, t]);
 
   useEffect(() => {
     connectSSE();
@@ -96,19 +98,19 @@ export default function ServicesPage({ params }: { params: Promise<{ hotelId: st
       qc.invalidateQueries({ queryKey: ['service-stats', hotelId] });
       toast.success(`Request marked as ${nextStatus}`);
     } catch {
-      toast.error('Failed to update status');
+      toast.error(t('services.failedUpdate'));
     }
   };
 
   return (
     <div className="p-6 max-w-[1200px] animate-fade-in">
       <PageHeader
-        title="Service Requests"
-        subtitle="Guest requests & tasks"
+        title={t('services.title')}
+        subtitle={t('services.subtitle')}
         actions={
           <div className="flex items-center gap-2 text-xs">
             <span className={`w-2 h-2 rounded-full ${liveConnected ? 'bg-teal live-dot' : 'bg-rose'}`} />
-            <span className="text-ink-400">{liveConnected ? 'Live' : 'Reconnecting...'}</span>
+            <span className="text-ink-400">{liveConnected ? t('services.live') : t('services.reconnecting')}</span>
           </div>
         }
       />
@@ -117,10 +119,10 @@ export default function ServicesPage({ params }: { params: Promise<{ hotelId: st
       {stats && (
         <div className="flex flex-wrap gap-3 mb-5">
           {[
-            { label: 'Pending', value: stats.byStatus.pending ?? 0, color: '#F0A500' },
-            { label: 'In Progress', value: stats.byStatus.in_progress ?? 0, color: '#F59E0B' },
-            { label: 'Today Revenue', value: formatCurrency(stats.todayRevenue), color: '#10B981' },
-            { label: 'Avg. Completion', value: `${Math.round(stats.averageCompletionMinutes ?? 0)}min`, color: '#3B82F6' },
+            { label: t('services.pending'), value: stats.byStatus.pending ?? 0, color: '#F0A500' },
+            { label: t('services.inProgress'), value: stats.byStatus.in_progress ?? 0, color: '#F59E0B' },
+            { label: t('services.todayRevenue'), value: formatCurrency(stats.todayRevenue), color: '#10B981' },
+            { label: t('services.avgCompletion'), value: `${Math.round(stats.averageCompletionMinutes ?? 0)}min`, color: '#3B82F6' },
           ].map(s => (
             <div key={s.label} className="card px-4 py-3 flex items-center gap-3">
               <span className="num font-700 text-lg" style={{ color: s.color, fontFamily: 'var(--font-jetbrains)' }}>{s.value}</span>
@@ -143,7 +145,7 @@ export default function ServicesPage({ params }: { params: Promise<{ hotelId: st
               border: `1px solid ${statusFilter === s.value ? 'rgba(240,165,0,0.2)' : 'transparent'}`,
             }}
           >
-            {s.label}
+            {t(s.key)}
             {s.value === 'pending' && stats?.byStatus.pending ? (
               <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-700" style={{ background: 'rgba(240,165,0,0.2)', color: '#F0A500' }}>
                 {stats.byStatus.pending}
@@ -160,7 +162,7 @@ export default function ServicesPage({ params }: { params: Promise<{ hotelId: st
             {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-14 shimmer rounded-lg" />)}
           </div>
         ) : !data?.requests?.length ? (
-          <div className="flex items-center justify-center h-40 text-ink-500 text-sm">No service requests</div>
+          <div className="flex items-center justify-center h-40 text-ink-500 text-sm">{t('services.noRequests')}</div>
         ) : (
           <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
             {data.requests.map(req => {
@@ -210,7 +212,7 @@ export default function ServicesPage({ params }: { params: Promise<{ hotelId: st
                       className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-600 font-display transition-all"
                       style={{ background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }}
                     >
-                      {NEXT_LABEL[req.status] || next}
+                      {NEXT_LABEL_KEY[req.status] ? t(NEXT_LABEL_KEY[req.status]) : next}
                     </button>
                   )}
                   {req.status === 'pending' && (

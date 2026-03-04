@@ -7,20 +7,22 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { StageBadge } from '@/components/ui/StageBadge';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatDate } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
-const STAGES: { value: string; label: string }[] = [
-  { value: '', label: 'All Stages' },
-  { value: 'PRE_ARRIVAL', label: 'Pre-Arrival' },
-  { value: 'CHECKED_IN', label: 'Checked In' },
-  { value: 'IN_STAY', label: 'In Stay' },
-  { value: 'CHECKOUT', label: 'Checkout' },
-  { value: 'POST_STAY', label: 'Post-Stay' },
-  { value: 'BETWEEN_STAYS', label: 'Between Stays' },
+const STAGES: { value: string; key: string }[] = [
+  { value: '', key: 'guests.allStages' },
+  { value: 'PRE_ARRIVAL', key: 'guests.preArrival' },
+  { value: 'CHECKED_IN', key: 'guests.checkedIn' },
+  { value: 'IN_STAY', key: 'guests.inStay' },
+  { value: 'CHECKOUT', key: 'guests.checkout' },
+  { value: 'POST_STAY', key: 'guests.postStay' },
+  { value: 'BETWEEN_STAYS', key: 'guests.betweenStays' },
 ];
 
 export default function GuestsPage({ params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = use(params);
   const { token } = useDashboardAuth();
+  const { t } = useI18n();
   const [stage, setStage] = useState('');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -41,7 +43,7 @@ export default function GuestsPage({ params }: { params: Promise<{ hotelId: stri
 
   return (
     <div className="p-6 max-w-[1200px] animate-fade-in">
-      <PageHeader title="Guests" subtitle={`${data?.total ?? 0} total guests`} />
+      <PageHeader title={t('guests.title')} subtitle={t('guests.totalGuests', { n: data?.total ?? 0 })} />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-5">
@@ -58,7 +60,7 @@ export default function GuestsPage({ params }: { params: Promise<{ hotelId: stri
                 border: `1px solid ${stage === s.value ? 'rgba(240,165,0,0.2)' : 'transparent'}`,
               }}
             >
-              {s.label}
+              {t(s.key)}
             </button>
           ))}
         </div>
@@ -68,7 +70,7 @@ export default function GuestsPage({ params }: { params: Promise<{ hotelId: stri
             <input
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              placeholder="Search name, email, phone..."
+              placeholder={t('guests.searchPlaceholder')}
               className="flex-1"
               style={{ padding: '8px 12px' }}
             />
@@ -77,7 +79,7 @@ export default function GuestsPage({ params }: { params: Promise<{ hotelId: stri
               className="px-4 h-9 rounded-lg text-xs font-600 font-display shrink-0 transition-colors"
               style={{ background: 'rgba(240,165,0,0.12)', color: '#F0A500', border: '1px solid rgba(240,165,0,0.2)' }}
             >
-              Search
+              {t('guests.search')}
             </button>
           </form>
         </div>
@@ -93,21 +95,21 @@ export default function GuestsPage({ params }: { params: Promise<{ hotelId: stri
           </div>
         ) : !data?.guests?.length ? (
           <div className="flex items-center justify-center h-40 text-ink-500 text-sm">
-            {search || stage ? 'No guests match your filters' : 'No guests found'}
+            {search || stage ? t('guests.noGuestsMatch') : t('guests.noGuests')}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Guest</th>
-                  <th>Contact</th>
-                  <th>Room</th>
-                  <th>Stage</th>
-                  <th>Check-in</th>
-                  <th>Check-out</th>
-                  <th>Source</th>
-                  <th>Pre-checkin</th>
+                  <th>{t('guests.guest')}</th>
+                  <th>{t('guests.contact')}</th>
+                  <th>{t('guests.room')}</th>
+                  <th>{t('guests.stage')}</th>
+                  <th>{t('guests.checkIn')}</th>
+                  <th>{t('guests.checkOut')}</th>
+                  <th>{t('guests.source')}</th>
+                  <th>{t('guests.preCheckin')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -139,8 +141,8 @@ export default function GuestsPage({ params }: { params: Promise<{ hotelId: stri
                     <td className="text-ink-400 text-xs capitalize">{guest.source}</td>
                     <td>
                       {guest.preCheckinCompleted
-                        ? <span className="text-teal text-xs font-600">✓ Done</span>
-                        : <span className="text-ink-500 text-xs">Pending</span>}
+                        ? <span className="text-teal text-xs font-600">{t('guests.done')}</span>
+                        : <span className="text-ink-500 text-xs">{t('guests.pending')}</span>}
                     </td>
                   </tr>
                 ))}

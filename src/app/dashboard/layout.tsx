@@ -4,29 +4,32 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DashboardAuthProvider, useDashboardAuth } from '@/contexts/DashboardAuthContext';
+import { useI18n } from '@/lib/i18n';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
 });
 
-const NAV = [
-  { href: '', label: 'Overview', icon: OverviewIcon },
-  { href: '/guests', label: 'Guests', icon: GuestsIcon },
-  { href: '/orders', label: 'Orders', icon: OrdersIcon },
-  { href: '/services', label: 'Services', icon: ServicesIcon },
-  { href: '/qr', label: 'QR Codes', icon: QRIcon },
-  { href: '/stats', label: 'Statistics', icon: StatsIcon },
-  { href: '/sms', label: 'SMS Logs', icon: SMSIcon },
-  { href: '/housekeeping', label: 'Housekeeping', icon: HousekeepingIcon },
-  { href: '/staff', label: 'Staff', icon: StaffIcon },
-  { href: '/templates', label: 'Templates', icon: TemplatesIcon },
-  { href: '/tasks', label: 'TMS Tasks', icon: TasksIcon },
-];
-
 function Sidebar({ hotelId }: { hotelId: string }) {
   const { manager, activeHotel, setActiveHotel, logout } = useDashboardAuth();
   const pathname = usePathname();
   const base = `/dashboard/${hotelId}`;
+  const { t } = useI18n();
+
+  const NAV = [
+    { href: '', label: t('nav.overview'), icon: OverviewIcon },
+    { href: '/guests', label: t('nav.guests'), icon: GuestsIcon },
+    { href: '/orders', label: t('nav.orders'), icon: OrdersIcon },
+    { href: '/services', label: t('nav.services'), icon: ServicesIcon },
+    { href: '/qr', label: t('nav.qr'), icon: QRIcon },
+    { href: '/stats', label: t('nav.statistics'), icon: StatsIcon },
+    { href: '/sms', label: t('nav.smsLogs'), icon: SMSIcon },
+    { href: '/housekeeping', label: t('nav.housekeeping'), icon: HousekeepingIcon },
+    { href: '/staff', label: t('nav.staff'), icon: StaffIcon },
+    { href: '/templates', label: t('nav.templates'), icon: TemplatesIcon },
+    { href: '/tasks', label: t('nav.tmsTasks'), icon: TasksIcon },
+  ];
 
   return (
     <aside className="w-[220px] shrink-0 h-screen sticky top-0 flex flex-col border-r" style={{ borderColor: 'rgba(255,255,255,0.06)', background: '#0F141A' }}>
@@ -62,8 +65,8 @@ function Sidebar({ hotelId }: { hotelId: string }) {
 
       {/* Active hotel label */}
       <div className="px-5 py-3">
-        <p className="text-xs font-600 uppercase tracking-widest text-ink-400 font-display mb-0.5">Property</p>
-        <p className="text-sm font-600 text-white truncate">{activeHotel?.name ?? 'Loading...'}</p>
+        <p className="text-xs font-600 uppercase tracking-widest text-ink-400 font-display mb-0.5">{t('nav.property')}</p>
+        <p className="text-sm font-600 text-white truncate">{activeHotel?.name ?? t('nav.loading')}</p>
       </div>
 
       {/* Nav */}
@@ -84,7 +87,7 @@ function Sidebar({ hotelId }: { hotelId: string }) {
             >
               <Icon active={isActive} />
               {label}
-              {label === 'Orders' && (
+              {href === '/orders' && (
                 <span className="ml-auto">
                   <LiveDot />
                 </span>
@@ -95,23 +98,28 @@ function Sidebar({ hotelId }: { hotelId: string }) {
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-700 font-display shrink-0"
-            style={{ background: 'rgba(240,165,0,0.15)', color: '#F0A500' }}>
-            {manager?.username[0]?.toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-600 text-white truncate">{manager?.username}</p>
-            <p className="text-xs text-ink-400">{manager?.role}</p>
+      <div className="px-4 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-700 font-display shrink-0"
+              style={{ background: 'rgba(240,165,0,0.15)', color: '#F0A500' }}>
+              {manager?.username[0]?.toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-600 text-white truncate">{manager?.username}</p>
+              <p className="text-xs text-ink-400">{manager?.role}</p>
+            </div>
           </div>
         </div>
-        <button onClick={logout} className="w-full text-xs text-ink-400 hover:text-rose transition-colors py-1.5 flex items-center gap-1.5">
-          <svg width="13" height="13" fill="none" viewBox="0 0 24 24">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Sign out
-        </button>
+        <div className="flex items-center justify-between">
+          <LanguageSwitcher />
+          <button onClick={logout} className="text-xs text-ink-400 hover:text-rose transition-colors py-1 flex items-center gap-1.5">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            {t('nav.signOut')}
+          </button>
+        </div>
       </div>
     </aside>
   );
@@ -129,7 +137,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useDashboardAuth();
   const router = useRouter();
   const pathname = usePathname();
-  // Extract hotelId from /dashboard/[hotelId]/...
   const hotelId = pathname.split('/')[2] ?? '';
 
   useEffect(() => {

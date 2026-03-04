@@ -6,17 +6,19 @@ import { dashboardApi } from '@/lib/api/dashboard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatDateTime } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 const SMS_STATUSES = [
-  { value: '', label: 'All' },
-  { value: 'sent', label: 'Sent' },
-  { value: 'failed', label: 'Failed' },
-  { value: 'queued', label: 'Queued' },
+  { value: '', key: 'sms.all' },
+  { value: 'sent', key: 'sms.sent' },
+  { value: 'failed', key: 'sms.failed' },
+  { value: 'queued', key: 'sms.queued' },
 ];
 
 export default function SMSLogsPage({ params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = use(params);
   const { token } = useDashboardAuth();
+  const { t } = useI18n();
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const LIMIT = 20;
@@ -33,8 +35,8 @@ export default function SMSLogsPage({ params }: { params: Promise<{ hotelId: str
   return (
     <div className="p-6 max-w-[1200px] animate-fade-in">
       <PageHeader
-        title="SMS Logs"
-        subtitle="Delivery status for all SMS messages"
+        title={t('sms.title')}
+        subtitle={t('sms.subtitle')}
       />
 
       {/* Status filter */}
@@ -50,7 +52,7 @@ export default function SMSLogsPage({ params }: { params: Promise<{ hotelId: str
               border: `1px solid ${status === s.value ? 'rgba(240,165,0,0.2)' : 'transparent'}`,
             }}
           >
-            {s.label}
+            {t(s.key)}
             {s.value === 'failed' && failedCount > 0 && (
               <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-700" style={{ background: 'rgba(244,63,94,0.2)', color: '#F43F5E' }}>
                 {failedCount}
@@ -59,7 +61,7 @@ export default function SMSLogsPage({ params }: { params: Promise<{ hotelId: str
           </button>
         ))}
         <div className="ml-auto text-xs text-ink-400 self-center">
-          Total: <span className="num text-white">{data?.total ?? 0}</span>
+          {t('sms.total')}: <span className="num text-white">{data?.total ?? 0}</span>
         </div>
       </div>
 
@@ -69,18 +71,18 @@ export default function SMSLogsPage({ params }: { params: Promise<{ hotelId: str
             {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-10 shimmer rounded-lg" />)}
           </div>
         ) : !data?.logs?.length ? (
-          <div className="flex items-center justify-center h-40 text-ink-500 text-sm">No SMS logs</div>
+          <div className="flex items-center justify-center h-40 text-ink-500 text-sm">{t('sms.noLogs')}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Phone</th>
-                  <th>Template</th>
-                  <th>Provider</th>
-                  <th>Status</th>
-                  <th>Error</th>
-                  <th>Sent At</th>
+                  <th>{t('sms.phone')}</th>
+                  <th>{t('sms.template')}</th>
+                  <th>{t('sms.provider')}</th>
+                  <th>{t('sms.status')}</th>
+                  <th>{t('sms.error')}</th>
+                  <th>{t('sms.sentAt')}</th>
                 </tr>
               </thead>
               <tbody>

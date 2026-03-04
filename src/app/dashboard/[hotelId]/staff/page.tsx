@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDashboardAuth } from '@/contexts/DashboardAuthContext';
 import { dashboardApi, type StaffMember, type CreateStaffData } from '@/lib/api/dashboard';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useI18n } from '@/lib/i18n';
 
 const ROLES = ['LINE_STAFF', 'SUPERVISOR', 'HEAD_OF_DEPT', 'RECEPTIONIST', 'GENERAL_MANAGER'];
 const DEPARTMENTS = ['HOUSEKEEPING', 'MAINTENANCE', 'FOOD_AND_BEVERAGE', 'FRONT_OFFICE', 'SECURITY', 'MANAGEMENT'];
@@ -35,6 +36,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
   const { hotelId } = use(params);
   const { token } = useDashboardAuth();
   const qc = useQueryClient();
+  const { t } = useI18n();
 
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState<StaffMember | null>(null);
@@ -114,8 +116,8 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
   return (
     <div className="p-6 max-w-[1200px] animate-fade-in">
       <PageHeader
-        title="Staff Management"
-        subtitle="Manage hotel staff accounts, roles and PINs"
+        title={t('staff.title')}
+        subtitle={t('staff.subtitle')}
         actions={
           <button
             onClick={openCreate}
@@ -123,7 +125,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
             style={{ background: 'rgba(240,165,0,0.12)', color: '#F0A500', border: '1px solid rgba(240,165,0,0.2)' }}
           >
             <span style={{ fontSize: 18, lineHeight: 1 }}>+</span>
-            Add Staff
+            {t('staff.addStaff')}
           </button>
         }
       />
@@ -141,7 +143,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
               border: `1px solid ${filterActive === f ? 'rgba(240,165,0,0.2)' : 'transparent'}`,
             }}
           >
-            {f}
+            {t(`staff.${f}`)}
           </button>
         ))}
         <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.08)' }} />
@@ -155,12 +157,12 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
             padding: '6px 10px',
           }}
         >
-          <option value="">All Departments</option>
+          <option value="">{t('staff.allDepartments')}</option>
           {DEPARTMENTS.map(d => (
             <option key={d} value={d}>{d.replace(/_/g, ' ')}</option>
           ))}
         </select>
-        <span className="text-xs text-ink-400 ml-auto">{filtered.length} members</span>
+        <span className="text-xs text-ink-400 ml-auto">{t('staff.members', { n: filtered.length })}</span>
       </div>
 
       {/* Table */}
@@ -176,20 +178,20 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
             <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#475569" strokeWidth="1.5">
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
             </svg>
-            <p className="text-sm text-ink-400">No staff found</p>
+            <p className="text-sm text-ink-400">{t('staff.noStaff')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Dept</th>
-                  <th>Floor</th>
-                  <th>Status</th>
-                  <th>Shift</th>
-                  <th>Actions</th>
+                  <th>{t('staff.name')}</th>
+                  <th>{t('staff.role')}</th>
+                  <th>{t('staff.dept')}</th>
+                  <th>{t('staff.floor')}</th>
+                  <th>{t('staff.status')}</th>
+                  <th>{t('staff.shift')}</th>
+                  <th>{t('staff.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -231,13 +233,13 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
                         className="w-2 h-2 rounded-full inline-block"
                         style={{ background: s.isActive ? '#10B981' : '#475569' }}
                       />
-                      <span className="text-xs text-ink-400 ml-1.5">{s.isActive ? 'Active' : 'Inactive'}</span>
+                      <span className="text-xs text-ink-400 ml-1.5">{s.isActive ? t('staff.activeStatus') : t('staff.inactiveStatus')}</span>
                     </td>
                     <td>
                       {isOnShift(s) ? (
-                        <span className="text-xs font-600" style={{ color: '#10B981' }}>● On Shift</span>
+                        <span className="text-xs font-600" style={{ color: '#10B981' }}>{t('staff.onShift')}</span>
                       ) : (
-                        <span className="text-xs text-ink-500">Off</span>
+                        <span className="text-xs text-ink-500">{t('staff.off')}</span>
                       )}
                     </td>
                     <td>
@@ -247,26 +249,26 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
                           className="px-2.5 py-1 rounded text-xs text-ink-300 hover:text-white transition-colors"
                           style={{ background: 'rgba(255,255,255,0.05)' }}
                         >
-                          Edit
+                          {t('staff.edit')}
                         </button>
                         <button
                           onClick={() => { setPinModal({ staffId: s.id, name: `${s.firstName} ${s.lastName}` }); setNewPin(''); }}
                           className="px-2.5 py-1 rounded text-xs text-ink-300 hover:text-white transition-colors"
                           style={{ background: 'rgba(255,255,255,0.05)' }}
                         >
-                          PIN
+                          {t('staff.pin')}
                         </button>
                         {s.isActive && (
                           <button
                             onClick={() => {
-                              if (confirm(`Deactivate ${s.firstName}?`)) {
+                              if (confirm(t('staff.deactivateConfirm', { name: s.firstName }))) {
                                 deactivateMut.mutate(s.id);
                               }
                             }}
                             className="px-2.5 py-1 rounded text-xs hover:text-white transition-colors"
                             style={{ background: 'rgba(244,63,94,0.08)', color: '#F43F5E' }}
                           >
-                            Deactivate
+                            {t('staff.deactivate')}
                           </button>
                         )}
                       </div>
@@ -285,14 +287,14 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
           <div className="card w-full max-w-lg p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-700 font-display text-white">
-                {editTarget ? 'Edit Staff Member' : 'Add Staff Member'}
+                {editTarget ? t('staff.editStaffMember') : t('staff.addStaffMember')}
               </h2>
               <button onClick={closeModal} className="text-ink-400 hover:text-white text-xl leading-none">×</button>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-ink-400 mb-1 block">First Name *</label>
+                <label className="text-xs text-ink-400 mb-1 block">{t('staff.firstName')}</label>
                 <input
                   className="w-full text-sm"
                   style={inputStyle}
@@ -302,7 +304,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
                 />
               </div>
               <div>
-                <label className="text-xs text-ink-400 mb-1 block">Last Name</label>
+                <label className="text-xs text-ink-400 mb-1 block">{t('staff.lastName')}</label>
                 <input
                   className="w-full text-sm"
                   style={inputStyle}
@@ -314,7 +316,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
             </div>
 
             <div>
-              <label className="text-xs text-ink-400 mb-1 block">Email *</label>
+              <label className="text-xs text-ink-400 mb-1 block">{t('staff.email')}</label>
               <input
                 className="w-full text-sm"
                 style={inputStyle}
@@ -327,7 +329,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-ink-400 mb-1 block">Role *</label>
+                <label className="text-xs text-ink-400 mb-1 block">{t('staff.roleLabel')}</label>
                 <select
                   className="w-full text-sm"
                   style={inputStyle}
@@ -338,7 +340,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
                 </select>
               </div>
               <div>
-                <label className="text-xs text-ink-400 mb-1 block">Department *</label>
+                <label className="text-xs text-ink-400 mb-1 block">{t('staff.department')}</label>
                 <select
                   className="w-full text-sm"
                   style={inputStyle}
@@ -352,7 +354,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-ink-400 mb-1 block">Phone</label>
+                <label className="text-xs text-ink-400 mb-1 block">{t('staff.phone')}</label>
                 <input
                   className="w-full text-sm"
                   style={inputStyle}
@@ -362,7 +364,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
                 />
               </div>
               <div>
-                <label className="text-xs text-ink-400 mb-1 block">Assigned Floor</label>
+                <label className="text-xs text-ink-400 mb-1 block">{t('staff.assignedFloor')}</label>
                 <input
                   className="w-full text-sm"
                   style={inputStyle}
@@ -375,7 +377,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
 
             <div>
               <label className="text-xs text-ink-400 mb-1 block">
-                {editTarget ? 'New Password (leave blank to keep)' : 'Password *'}
+                {editTarget ? t('staff.newPassword') : t('staff.passwordLabel')}
               </label>
               <input
                 type="password"
@@ -389,7 +391,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
 
             {(createMut.isError || updateMut.isError) && (
               <p className="text-xs" style={{ color: '#F43F5E' }}>
-                {(createMut.error as any)?.response?.data?.error ?? 'Failed to save'}
+                {(createMut.error as any)?.response?.data?.error ?? t('staff.failedSave')}
               </p>
             )}
 
@@ -399,7 +401,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
                 className="flex-1 py-2 rounded-lg text-sm text-ink-300 hover:text-white transition-colors"
                 style={{ background: 'rgba(255,255,255,0.05)' }}
               >
-                Cancel
+                {t('staff.cancel')}
               </button>
               <button
                 onClick={submit}
@@ -407,7 +409,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
                 className="flex-1 py-2 rounded-lg text-sm font-600 transition-all"
                 style={{ background: '#F0A500', color: '#0D1117', opacity: isPending ? 0.6 : 1 }}
               >
-                {isPending ? 'Saving…' : editTarget ? 'Save Changes' : 'Create Staff'}
+                {isPending ? t('staff.saving') : editTarget ? t('staff.saveChanges') : t('staff.createStaff')}
               </button>
             </div>
           </div>
@@ -419,12 +421,12 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
           <div className="card w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-700 font-display text-white">Reset PIN</h2>
+              <h2 className="text-lg font-700 font-display text-white">{t('staff.resetPin')}</h2>
               <button onClick={() => setPinModal(null)} className="text-ink-400 hover:text-white text-xl leading-none">×</button>
             </div>
-            <p className="text-sm text-ink-300">Set new PIN for <span className="text-white font-600">{pinModal.name}</span></p>
+            <p className="text-sm text-ink-300">{t('staff.setPinFor', { name: pinModal.name })}</p>
             <div>
-              <label className="text-xs text-ink-400 mb-1 block">New PIN (4-8 digits)</label>
+              <label className="text-xs text-ink-400 mb-1 block">{t('staff.newPinLabel')}</label>
               <input
                 type="password"
                 inputMode="numeric"
@@ -442,7 +444,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
                 className="flex-1 py-2 rounded-lg text-sm text-ink-300"
                 style={{ background: 'rgba(255,255,255,0.05)' }}
               >
-                Cancel
+                {t('staff.cancel')}
               </button>
               <button
                 onClick={() => pinMut.mutate({ staffId: pinModal.staffId, pin: newPin })}
@@ -450,7 +452,7 @@ export default function StaffPage({ params }: { params: Promise<{ hotelId: strin
                 className="flex-1 py-2 rounded-lg text-sm font-600"
                 style={{ background: '#F0A500', color: '#0D1117', opacity: newPin.length < 4 ? 0.5 : 1 }}
               >
-                {pinMut.isPending ? 'Saving…' : 'Set PIN'}
+                {pinMut.isPending ? t('staff.saving') : t('staff.setPin')}
               </button>
             </div>
           </div>

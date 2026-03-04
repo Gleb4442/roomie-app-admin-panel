@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useDashboardAuth } from '@/contexts/DashboardAuthContext';
 import { dashboardApi, type TMSStats } from '@/lib/api/dashboard';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useI18n } from '@/lib/i18n';
 import {
   PieChart, Pie, Cell, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -51,12 +52,12 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
-function PieTooltip({ active, payload }: any) {
+function PieTooltipInner({ active, payload, tasksLabel }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="px-3 py-2 rounded-lg text-xs" style={{ background: '#1C2230', border: '1px solid rgba(255,255,255,0.1)' }}>
       <p style={{ color: payload[0].payload.fill }}>{payload[0].name}</p>
-      <p className="text-white font-600">{payload[0].value} tasks</p>
+      <p className="text-white font-600">{payload[0].value} {tasksLabel}</p>
     </div>
   );
 }
@@ -74,6 +75,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string 
 export default function TMSTasksPage({ params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = use(params);
   const { token } = useDashboardAuth();
+  const { t } = useI18n();
 
   const { data: stats, isLoading } = useQuery<TMSStats>({
     queryKey: ['tms-stats', hotelId],
@@ -104,15 +106,17 @@ export default function TMSTasksPage({ params }: { params: Promise<{ hotelId: st
     fill: DEPT_COLOR[d.department] ?? '#64748B',
   })).sort((a, b) => b.tasks - a.tasks);
 
+  const tasksLabel = t('tasks.tasks');
+
   return (
     <div className="p-6 max-w-[1200px] animate-fade-in">
       <PageHeader
-        title="TMS Analytics"
-        subtitle="Task management statistics — last 30 days"
+        title={t('tasks.title')}
+        subtitle={t('tasks.subtitle')}
         actions={
           <span className="text-xs text-ink-400 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: '#10B981' }} />
-            Auto-refreshes every minute
+            {t('tasks.autoRefresh')}
           </span>
         }
       />
@@ -133,13 +137,13 @@ export default function TMSTasksPage({ params }: { params: Promise<{ hotelId: st
         <div className="space-y-5">
           {/* KPI cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard label="Total Tasks" value={totalTasks} sub="last 30 days" />
-            <StatCard label="Active" value={activeTasks} sub="in progress / assigned" accent="#3B82F6" />
-            <StatCard label="Completed" value={completedTasks} sub="last 30 days" accent="#10B981" />
+            <StatCard label={t('tasks.totalTasks')} value={totalTasks} sub={t('tasks.lastDays')} />
+            <StatCard label={t('tasks.active')} value={activeTasks} sub={t('tasks.inProgressAssigned')} accent="#3B82F6" />
+            <StatCard label={t('tasks.completed')} value={completedTasks} sub={t('tasks.lastDays')} accent="#10B981" />
             <StatCard
-              label="SLA Compliance"
+              label={t('tasks.slaCompliance')}
               value={slaLabel}
-              sub={stats?.slaTotal ? `${stats.slaTotal} tasks with SLA` : 'No SLA data'}
+              sub={stats?.slaTotal ? t('tasks.tasksWithSla', { n: stats.slaTotal }) : t('tasks.noSlaData')}
               accent={
                 stats?.slaCompliance == null ? '#64748B' :
                 stats.slaCompliance >= 80 ? '#10B981' :
@@ -152,9 +156,9 @@ export default function TMSTasksPage({ params }: { params: Promise<{ hotelId: st
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Pie: by status */}
             <div className="card p-5">
-              <h3 className="text-sm font-600 text-white mb-4">Tasks by Status</h3>
+              <h3 className="text-sm font-600 text-white mb-4">{t('tasks.tasksByStatus')}</h3>
               {pieData.length === 0 ? (
-                <div className="flex items-center justify-center h-44 text-ink-500 text-sm">No tasks in the last 30 days</div>
+                <div className="flex items-center justify-center h-44 text-ink-500 text-sm">{t('tasks.noTasks')}</div>
               ) : (
                 <div className="flex items-center gap-4">
                   <ResponsiveContainer width={160} height={160}>
@@ -172,7 +176,7 @@ export default function TMSTasksPage({ params }: { params: Promise<{ hotelId: st
                           <Cell key={i} fill={entry.fill} />
                         ))}
                       </Pie>
-                      <Tooltip content={<PieTooltip />} />
+                      <Tooltip content={(props) => <PieTooltipInner {...props} tasksLabel={tasksLabel} />} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="space-y-1.5 flex-1">
@@ -192,9 +196,9 @@ export default function TMSTasksPage({ params }: { params: Promise<{ hotelId: st
 
             {/* Bar: by department */}
             <div className="card p-5">
-              <h3 className="text-sm font-600 text-white mb-4">Tasks by Department</h3>
+              <h3 className="text-sm font-600 text-white mb-4">{t('tasks.tasksByDept')}</h3>
               {barData.length === 0 ? (
-                <div className="flex items-center justify-center h-44 text-ink-500 text-sm">No tasks in the last 30 days</div>
+                <div className="flex items-center justify-center h-44 text-ink-500 text-sm">{t('tasks.noTasks')}</div>
               ) : (
                 <ResponsiveContainer width="100%" height={170}>
                   <BarChart data={barData} margin={{ top: 0, right: 0, bottom: 0, left: -20 }} barSize={18}>
@@ -216,16 +220,16 @@ export default function TMSTasksPage({ params }: { params: Promise<{ hotelId: st
           {/* Status breakdown table */}
           <div className="card overflow-hidden">
             <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <h3 className="text-sm font-600 text-white">Status Breakdown</h3>
+              <h3 className="text-sm font-600 text-white">{t('tasks.statusBreakdown')}</h3>
             </div>
             {stats?.byStatus && stats.byStatus.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Status</th>
-                      <th>Count</th>
-                      <th>Share</th>
+                      <th>{t('tasks.statusLabel')}</th>
+                      <th>{t('tasks.count')}</th>
+                      <th>{t('tasks.share')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -268,7 +272,7 @@ export default function TMSTasksPage({ params }: { params: Promise<{ hotelId: st
               </div>
             ) : (
               <div className="flex items-center justify-center h-20 text-ink-500 text-sm">
-                No task data available
+                {t('tasks.noTaskData')}
               </div>
             )}
           </div>
@@ -276,7 +280,7 @@ export default function TMSTasksPage({ params }: { params: Promise<{ hotelId: st
           {/* SLA info */}
           {stats?.slaTotal && stats.slaTotal > 0 && (
             <div className="card p-5">
-              <h3 className="text-sm font-600 text-white mb-3">SLA Performance</h3>
+              <h3 className="text-sm font-600 text-white mb-3">{t('tasks.slaPerformance')}</h3>
               <div className="flex items-center gap-4">
                 <div
                   className="relative w-24 h-24 shrink-0"
@@ -294,20 +298,18 @@ export default function TMSTasksPage({ params }: { params: Promise<{ hotelId: st
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-ink-300">
-                    <span className="text-white font-600">{stats.slaTotal}</span> tasks had an SLA target in the last 30 days.
+                    {t('tasks.tasksHadSla', { n: stats.slaTotal })}
                   </p>
                   <p className="text-sm text-ink-300">
-                    <span className="font-600" style={{ color: '#10B981' }}>
-                      {stats.slaCompliance !== null ? Math.round(stats.slaCompliance / 100 * stats.slaTotal) : 0}
-                    </span> completed within SLA.
+                    {t('tasks.completedWithinSla', { n: stats.slaCompliance !== null ? Math.round(stats.slaCompliance / 100 * stats.slaTotal) : 0 })}
                   </p>
                   {stats.slaCompliance !== null && (
                     <p className="text-xs text-ink-500 mt-2">
                       {stats.slaCompliance >= 80
-                        ? '✅ SLA compliance is healthy'
+                        ? t('tasks.slaHealthy')
                         : stats.slaCompliance >= 60
-                          ? '⚠️ SLA compliance needs improvement'
-                          : '🔴 SLA compliance is critical — review staffing and priorities'}
+                          ? t('tasks.slaNeedsImprovement')
+                          : t('tasks.slaCritical')}
                     </p>
                   )}
                 </div>
