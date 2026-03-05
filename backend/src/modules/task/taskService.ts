@@ -4,6 +4,7 @@ import { AppError } from '../../shared/middleware/errorHandler';
 import { logger } from '../../shared/utils/logger';
 import { tmsConnector } from './tmsConnector';
 import { CreateRequestParams, HotelRequestFilters, VALID_STATUS_TRANSITIONS } from './types';
+import { recordStatusChange, publishServiceRequestUpdate, publishGuestStatusUpdate } from './taskStatusTracker';
 
 // ── Catalog ──────────────────────────────────────────────────────────────────
 
@@ -171,21 +172,27 @@ export const taskRequestService = {
       },
     });
 
-    // Publish to Redis for dashboard SSE
-    const event = JSON.stringify({
-      type: 'service_request_created',
-      data: {
-        id: serviceRequest.id,
-        status: serviceRequest.status,
-        category: serviceRequest.category.name,
-        roomNumber: serviceRequest.roomNumber,
-        guestName: `${serviceRequest.guest.firstName} ${serviceRequest.guest.lastName || ''}`.trim(),
-        totalAmount: serviceRequest.totalAmount,
-        createdAt: serviceRequest.createdAt,
-      },
-    });
+    // Record status change + emit event
+    recordStatusChange({
+      taskId: serviceRequest.id,
+      taskType: 'SERVICE_REQUEST',
+      hotelId: params.hotelId,
+      fromStatus: null,
+      toStatus: initialStatus,
+      changedById: params.guestId,
+      changedByType: 'guest',
+    }).catch(() => {});
 
-    redis.publish(`service_requests:${params.hotelId}`, event).catch(() => {});
+    // Publish to Redis for dashboard SSE
+    publishServiceRequestUpdate(params.hotelId, 'service_request_created', {
+      id: serviceRequest.id,
+      status: serviceRequest.status,
+      category: serviceRequest.category.name,
+      roomNumber: serviceRequest.roomNumber,
+      guestName: `${serviceRequest.guest.firstName} ${serviceRequest.guest.lastName || ''}`.trim(),
+      totalAmount: serviceRequest.totalAmount,
+      createdAt: serviceRequest.createdAt,
+    });
 
     // Push to external TMS if configured
     tmsConnector.pushTask(serviceRequest).catch(() => {});
@@ -228,10 +235,19 @@ export const taskRequestService = {
       },
     });
 
-    redis.publish(
-      `service_requests:${request.hotelId}`,
-      JSON.stringify({ type: 'service_request_updated', data: { id: updated.id, status: 'cancelled' } }),
-    ).catch(() => {});
+    recordStatusChange({
+      taskId: requestId,
+      taskType: 'SERVICE_REQUEST',
+      hotelId: request.hotelId,
+      fromStatus: request.status,
+      toStatus: 'cancelled',
+      changedById: guestId,
+      changedByType: 'guest',
+    }).catch(() => {});
+
+    publishServiceRequestUpdate(request.hotelId, 'service_request_updated', {
+      id: updated.id, status: 'cancelled',
+    });
 
     return updated;
   },
@@ -280,26 +296,29 @@ export const taskStaffService = {
       },
     });
 
-    // Publish status change
-    redis.publish(
-      `service_requests:${updated.hotelId}`,
-      JSON.stringify({
-        type: 'service_request_updated',
-        data: {
-          id: updated.id,
-          status: updated.status,
-          category: updated.category.name,
-          roomNumber: updated.roomNumber,
-          guestName: `${updated.guest.firstName} ${updated.guest.lastName || ''}`.trim(),
-        },
-      }),
-    ).catch(() => {});
+    // Record status change + emit event
+    recordStatusChange({
+      taskId: requestId,
+      taskType: 'SERVICE_REQUEST',
+      hotelId: updated.hotelId,
+      fromStatus: request.status,
+      toStatus: newStatus,
+      changedByType: 'staff',
+    }).catch(() => {});
+
+    // Publish status change to dashboard SSE
+    publishServiceRequestUpdate(updated.hotelId, 'service_request_updated', {
+      id: updated.id,
+      status: updated.status,
+      category: updated.category.name,
+      roomNumber: updated.roomNumber,
+      guestName: `${updated.guest.firstName} ${updated.guest.lastName || ''}`.trim(),
+    });
 
     // Notify guest via Redis (for polling)
-    redis.publish(
-      `service_request_status:${updated.guestId}`,
-      JSON.stringify({ requestId: updated.id, status: updated.status }),
-    ).catch(() => {});
+    publishGuestStatusUpdate(updated.guestId, {
+      requestId: updated.id, status: updated.status,
+    });
 
     return updated;
   },

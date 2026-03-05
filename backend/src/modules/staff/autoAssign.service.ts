@@ -34,6 +34,7 @@ export async function autoAssignTask(
   hotelId: string,
   department: StaffDepartment,
   roomNumber?: string,
+  options?: { excludeStaffIds?: string[] },
 ): Promise<string | null> {
   // 1. Get all staff on active shift
   const activeShifts = await prisma.staffShift.findMany({
@@ -53,8 +54,11 @@ export async function autoAssignTask(
 
   // Filter: only LINE_STAFF and SUPERVISOR of matching department who are active
   const ELIGIBLE_ROLES = ['LINE_STAFF', 'SUPERVISOR'];
+  const excludeSet = new Set(options?.excludeStaffIds ?? []);
   const candidates = activeShifts.filter(
-    s => ELIGIBLE_ROLES.includes(s.staff.role) && s.staff.isActive,
+    s => ELIGIBLE_ROLES.includes(s.staff.role)
+      && s.staff.isActive
+      && !excludeSet.has(s.staffId),
   );
 
   if (candidates.length === 0) return null;

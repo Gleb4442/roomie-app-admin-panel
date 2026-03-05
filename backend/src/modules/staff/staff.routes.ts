@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import * as ctrl from './staff.controller';
 import { staffAuth, requireRole, canManageTasks } from './staff.middleware';
+import * as roomCtrl from '../housekeeping/room.controller';
+import { asyncHandler } from '../../shared/utils/asyncHandler';
 
 const router = Router();
 
@@ -45,5 +47,9 @@ router.patch('/tasks/:taskId/checklist', ctrl.updateChecklist);
 // Comments
 router.get('/tasks/:taskType/:taskId/comments', ctrl.getComments);
 router.post('/tasks/:taskType/:taskId/comments', ctrl.addComment);
+
+// Housekeeping — room status (staff view)
+router.get('/rooms', asyncHandler(roomCtrl.getStaffRooms));
+router.patch('/rooms/:roomId/status', asyncHandler(roomCtrl.staffUpdateRoomStatus));
 
 export default router;

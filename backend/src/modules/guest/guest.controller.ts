@@ -125,4 +125,22 @@ export const guestController = {
       next(err);
     }
   },
+
+  async savePushToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const guestId = req.guest!.id;
+      const { expoPushToken } = req.body;
+      if (!expoPushToken) {
+        return res.status(400).json({ success: false, error: 'expoPushToken is required' });
+      }
+      const { prisma } = require('../../config/database');
+      await prisma.guestAccount.update({
+        where: { id: guestId },
+        data: { expoPushToken },
+      });
+      res.status(200).json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

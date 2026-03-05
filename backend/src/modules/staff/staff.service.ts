@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../../config/database';
 import { env } from '../../config/environment';
 import { StaffRole, StaffDepartment, TaskStatus, TaskPriority } from '@prisma/client';
+import { recordStatusChange } from '../task/taskStatusTracker';
 
 const STAFF_JWT_SECRET = process.env.STAFF_JWT_SECRET || 'staff-secret-change-in-prod';
 const ACCESS_TOKEN_EXPIRY = '8h';
@@ -210,46 +211,103 @@ export async function updateTaskStatus(
   const now = new Date();
 
   if (taskType === 'INTERNAL') {
+    const task = await prisma.internalTask.findUnique({ where: { id: taskId }, select: { status: true, hotelId: true, roomId: true } });
+    const previousStatus = task?.status ?? null;
+
     const updates: any = { status: newStatus, updatedAt: now };
+    if (newStatus === 'ACCEPTED') updates.acceptedAt = now;
     if (newStatus === 'IN_PROGRESS') updates.startedAt = now;
     if (newStatus === 'COMPLETED') updates.completedAt = now;
     if (newStatus === 'CLOSED') updates.closedAt = now;
     if (newStatus === 'ON_HOLD' && holdReason) updates.holdReason = holdReason;
 
-    return prisma.internalTask.update({ where: { id: taskId }, data: updates });
+    const result = await prisma.internalTask.update({ where: { id: taskId }, data: updates });
+
+    if (task) {
+      recordStatusChange({
+        taskId, taskType, hotelId: task.hotelId,
+        fromStatus: previousStatus, toStatus: newStatus,
+        changedById: staffId, changedByType: 'staff',
+        reason: holdReason,
+      }).catch(() => {});
+
+      // If this was a room cleaning task, update room status
+      if (newStatus === 'COMPLETED' && task.roomId) {
+        import('../housekeeping/room.service').then(({ onCleaningTaskCompleted }) => {
+          onCleaningTaskCompleted(taskId).catch(() => {});
+        }).catch(() => {});
+      }
+    }
+
+    return result;
   }
 
   if (taskType === 'SERVICE_REQUEST') {
+    const sr = await prisma.serviceRequest.findUnique({ where: { id: taskId }, select: { status: true, hotelId: true } });
+    const previousStatus = sr?.status ?? null;
+
     const statusMap: Record<string, string> = {
       ASSIGNED: 'confirmed',
+      ACCEPTED: 'accepted',
       IN_PROGRESS: 'in_progress',
       COMPLETED: 'done',
       CANCELLED: 'cancelled',
     };
-    return prisma.serviceRequest.update({
+    const mappedStatus = statusMap[newStatus] || newStatus;
+
+    const srUpdates: any = {
+      status: mappedStatus,
+      assignedStaffId: staffId,
+    };
+    if (newStatus === 'ACCEPTED') srUpdates.acceptedAt = now;
+    if (newStatus === 'IN_PROGRESS') srUpdates.startedAt = now;
+    if (newStatus === 'COMPLETED') srUpdates.completedAt = now;
+
+    const result = await prisma.serviceRequest.update({
       where: { id: taskId },
-      data: {
-        status: statusMap[newStatus] || newStatus,
-        assignedStaffId: staffId,
-        completedAt: newStatus === 'COMPLETED' ? now : undefined,
-      },
+      data: srUpdates,
     });
+
+    if (sr) {
+      recordStatusChange({
+        taskId, taskType, hotelId: sr.hotelId,
+        fromStatus: previousStatus, toStatus: mappedStatus,
+        changedById: staffId, changedByType: 'staff',
+      }).catch(() => {});
+    }
+
+    return result;
   }
 
   if (taskType === 'ORDER') {
+    const order = await prisma.order.findUnique({ where: { id: taskId }, select: { status: true, hotelId: true } });
+    const previousStatus = order?.status ?? null;
+
     const statusMap: Record<string, string> = {
       ASSIGNED: 'CONFIRMED',
       IN_PROGRESS: 'PREPARING',
       COMPLETED: 'DELIVERED',
       CANCELLED: 'CANCELLED',
     };
-    return prisma.order.update({
+    const mappedStatus = statusMap[newStatus] || newStatus;
+
+    const result = await prisma.order.update({
       where: { id: taskId },
       data: {
-        status: (statusMap[newStatus] || newStatus) as any,
+        status: mappedStatus as any,
         assignedStaffId: staffId,
       },
     });
+
+    if (order) {
+      recordStatusChange({
+        taskId, taskType, hotelId: order.hotelId,
+        fromStatus: previousStatus, toStatus: mappedStatus,
+        changedById: staffId, changedByType: 'staff',
+      }).catch(() => {});
+    }
+
+    return result;
   }
 }
 
@@ -258,27 +316,55 @@ export async function assignTask(
   taskId: string,
   assignedToId: string,
   note?: string,
+  assignedById?: string,
 ) {
   if (taskType === 'INTERNAL') {
-    return prisma.internalTask.update({
+    const task = await prisma.internalTask.findUnique({ where: { id: taskId }, select: { status: true, hotelId: true } });
+    const result = await prisma.internalTask.update({
       where: { id: taskId },
       data: {
         assignedToId,
         status: 'ASSIGNED' as any,
       },
     });
+    if (task) {
+      recordStatusChange({
+        taskId, taskType, hotelId: task.hotelId,
+        fromStatus: task.status, toStatus: 'ASSIGNED',
+        changedById: assignedById, changedByType: assignedById ? 'staff' : 'system',
+      }).catch(() => {});
+    }
+    return result;
   }
   if (taskType === 'SERVICE_REQUEST') {
-    return prisma.serviceRequest.update({
+    const sr = await prisma.serviceRequest.findUnique({ where: { id: taskId }, select: { status: true, hotelId: true } });
+    const result = await prisma.serviceRequest.update({
       where: { id: taskId },
       data: { assignedStaffId: assignedToId, staffNote: note },
     });
+    if (sr) {
+      recordStatusChange({
+        taskId, taskType, hotelId: sr.hotelId,
+        fromStatus: sr.status, toStatus: sr.status, // assignment doesn't change SR status
+        changedById: assignedById, changedByType: assignedById ? 'staff' : 'system',
+      }).catch(() => {});
+    }
+    return result;
   }
   if (taskType === 'ORDER') {
-    return prisma.order.update({
+    const order = await prisma.order.findUnique({ where: { id: taskId }, select: { status: true, hotelId: true } });
+    const result = await prisma.order.update({
       where: { id: taskId },
       data: { assignedStaffId: assignedToId, staffNote: note },
     });
+    if (order) {
+      recordStatusChange({
+        taskId, taskType, hotelId: order.hotelId,
+        fromStatus: order.status, toStatus: order.status,
+        changedById: assignedById, changedByType: assignedById ? 'staff' : 'system',
+      }).catch(() => {});
+    }
+    return result;
   }
 }
 
@@ -361,6 +447,17 @@ export async function createInternalTask(data: {
       });
     }
   }
+
+  // Record creation in audit trail
+  recordStatusChange({
+    taskId: task.id,
+    taskType: 'INTERNAL',
+    hotelId: data.hotelId,
+    fromStatus: null,
+    toStatus: status,
+    changedById: data.createdById,
+    changedByType: 'staff',
+  }).catch(() => {});
 
   return task;
 }
@@ -693,6 +790,7 @@ function normalizeInternalTask(t: any) {
     description: t.description,
     locationLabel: t.locationLabel,
     roomNumber: t.roomNumber,
+    roomId: t.roomId,
     priority: t.priority,
     status: t.status,
     department: t.department,
@@ -705,7 +803,24 @@ function normalizeInternalTask(t: any) {
     completedAt: t.completedAt,
     holdReason: t.holdReason,
     createdAt: t.createdAt,
+    updatedAt: t.updatedAt,
     slaMinutes: t.slaMinutes,
+    // Phase 3: Enhanced fields
+    escalationLevel: t.escalationLevel ?? 0,
+    slaBreached: t.slaBreached ?? false,
+    etaMinutes: t.etaMinutes,
+    etaUpdatedAt: t.etaUpdatedAt,
+    acceptedAt: t.acceptedAt,
+    rating: t.rating,
+    ratingComment: t.ratingComment,
+    ratedAt: t.ratedAt,
+    isBillable: t.isBillable ?? false,
+    cost: t.cost ? Number(t.cost) : null,
+    currency: t.currency,
+    source: t.source ?? 'STAFF',
+    syncStatus: t.syncStatus ?? 'NOT_SYNCED',
+    assigneeGroupId: t.assigneeGroupId,
+    externalTmsId: t.externalTmsId,
   };
 }
 
@@ -724,6 +839,23 @@ function normalizeServiceRequest(sr: any) {
     guest: sr.guest,
     items: sr.items?.map((i: any) => i.serviceItem?.name),
     createdAt: sr.createdAt,
+    updatedAt: sr.updatedAt,
+    // Phase 3: Enhanced fields
+    escalationLevel: sr.escalationLevel ?? 0,
+    slaBreached: sr.slaBreached ?? false,
+    slaMinutes: sr.slaMinutes,
+    dueAt: sr.dueAt,
+    etaMinutes: sr.etaMinutes,
+    etaUpdatedAt: sr.etaUpdatedAt,
+    startedAt: sr.startedAt,
+    completedAt: sr.completedAt,
+    acceptedAt: sr.acceptedAt,
+    rating: sr.rating,
+    ratingComment: sr.ratingComment,
+    ratedAt: sr.ratedAt,
+    source: sr.source ?? 'BUTTON',
+    syncStatus: sr.syncStatus ?? 'NOT_SYNCED',
+    assigneeGroupId: sr.assigneeGroupId,
   };
 }
 
@@ -745,6 +877,19 @@ function normalizeOrder(o: any) {
     currency: o.currency,
     orderNumber: o.orderNumber,
     createdAt: o.createdAt,
+    updatedAt: o.updatedAt,
+    // Phase 3: Enhanced fields
+    escalationLevel: o.escalationLevel ?? 0,
+    slaBreached: o.slaBreached ?? false,
+    slaMinutes: o.slaMinutes,
+    dueAt: o.dueAt,
+    etaMinutes: o.etaMinutes,
+    etaUpdatedAt: o.etaUpdatedAt,
+    rating: o.rating,
+    ratingComment: o.ratingComment,
+    ratedAt: o.ratedAt,
+    source: o.source ?? 'BUTTON',
+    syncStatus: o.syncStatus ?? 'NOT_SYNCED',
   };
 }
 

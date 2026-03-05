@@ -138,6 +138,14 @@ export class PMSSyncService {
         await this.recordStageTransition(stay.id, stay.stage, newStage, 'pms_sync');
         await this.publishStageChange(stay, newStage, hotelId);
         result.stageTransitions++;
+
+        // Update room housekeeping status on checkout/checkin
+        const roomNumber = reservation.roomNumber || stay.roomNumber;
+        if (reservation.status === 'checked_out') {
+          this.handleRoomEvent(hotelId, 'checkout', roomNumber ?? undefined).catch(() => {});
+        } else if (reservation.status === 'checked_in') {
+          this.handleRoomEvent(hotelId, 'checkin', roomNumber ?? undefined).catch(() => {});
+        }
       }
 
       result.updated++;
@@ -234,6 +242,24 @@ export class PMSSyncService {
         return 'BETWEEN_STAYS';
       default:
         return 'PRE_ARRIVAL';
+    }
+  }
+
+  /**
+   * Trigger housekeeping room status update on PMS checkout/checkin.
+   * Called from webhook handler or after processReservation detects a stage change.
+   */
+  async handleRoomEvent(hotelId: string, event: 'checkout' | 'checkin', roomNumber?: string): Promise<void> {
+    if (!roomNumber) return;
+    try {
+      const { roomService } = await import('../housekeeping/room.service');
+      if (event === 'checkout') {
+        await roomService.handleCheckout(hotelId, roomNumber);
+      } else {
+        await roomService.handleCheckin(hotelId, roomNumber);
+      }
+    } catch (err) {
+      logger.warn({ err, hotelId, roomNumber, event }, '[PMS] Failed to update room status');
     }
   }
 

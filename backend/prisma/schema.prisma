@@ -27,12 +27,14 @@ enum StaffDepartment {
 enum TaskStatus {
   NEW
   ASSIGNED
+  ACCEPTED
   IN_PROGRESS
   ON_HOLD
   COMPLETED
   INSPECTED
   CLOSED
   CANCELLED
+  ESCALATED
 }
 
 enum TaskPriority {
@@ -97,6 +99,7 @@ model GuestAccount {
   emailVerified  Boolean     @default(false)
   createdVia     EntrySource @default(organic)
   roomieChatId   String?
+  expoPushToken  String?
   profile        Json?
   preferences    Json?
   createdAt      DateTime    @default(now())
@@ -143,6 +146,9 @@ model Hotel {
   staffMembers       StaffMember[]
   internalTasks      InternalTask[]
   taskTemplates      TaskTemplate[]
+  departments        Department[]
+  staffGroups        StaffGroup[]
+  rooms              Room[]
 
   @@map("hotels")
 }
@@ -310,6 +316,20 @@ model Order {
   estimatedMinutes    Int?
   priority            TaskPriority @default(NORMAL)
   tmsTaskId           String?
+
+  // Phase 3: Enhanced fields
+  escalationLevel     Int          @default(0)
+  slaBreached         Boolean      @default(false)
+  slaMinutes          Int?
+  dueAt               DateTime?
+  etaMinutes          Int?
+  etaUpdatedAt        DateTime?
+  source              String       @default("BUTTON") // BUTTON | CHAT | QR | SYSTEM | POS
+  chatMessageId       String?
+  rating              Int?
+  ratingComment       String?
+  ratedAt             DateTime?
+  syncStatus          String       @default("NOT_SYNCED")
 
   confirmedAt         DateTime?
   preparingAt         DateTime?
@@ -488,6 +508,15 @@ model ServiceCategory {
   autoAccept        Boolean @default(false)
   estimatedMinutes  Int?
 
+  // SLA & ETA configuration
+  slaMinutes        Int?
+  slaWarningMinutes Int?
+  defaultEtaMinutes Int?
+
+  // Department link (optional — for task routing)
+  defaultDepartmentId String?
+  defaultDepartment   Department? @relation("CategoryDepartment", fields: [defaultDepartmentId], references: [id])
+
   hotel           Hotel           @relation(fields: [hotelId], references: [id])
   items           ServiceItem[]
   requests        ServiceRequest[]
@@ -555,6 +584,23 @@ model ServiceRequest {
   priority        TaskPriority @default(NORMAL)
   tmsTaskId       String?
 
+  // Phase 3: Enhanced fields
+  escalationLevel   Int       @default(0)
+  slaBreached       Boolean   @default(false)
+  slaMinutes        Int?
+  dueAt             DateTime?
+  etaMinutes        Int?
+  etaUpdatedAt      DateTime?
+  startedAt         DateTime?
+  source            String    @default("BUTTON") // BUTTON | CHAT | QR | SYSTEM
+  chatMessageId     String?
+  rating            Int?
+  ratingComment     String?
+  ratedAt           DateTime?
+  syncStatus        String    @default("NOT_SYNCED")
+  assigneeGroupId   String?
+  acceptedAt        DateTime?
+
   hotel           Hotel              @relation(fields: [hotelId], references: [id])
   guest           GuestAccount       @relation(fields: [guestId], references: [id])
   guestStay       GuestStay?         @relation(fields: [guestStayId], references: [id])
@@ -607,12 +653,16 @@ model StaffMember {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  hotel           Hotel            @relation(fields: [hotelId], references: [id])
-  shifts          StaffShift[]
-  createdTasks    InternalTask[]   @relation("CreatedTasks")
-  assignedTasks   InternalTask[]   @relation("AssignedTasks")
-  comments        TaskComment[]
-  uploads         TaskAttachment[]
+  hotel              Hotel            @relation(fields: [hotelId], references: [id])
+  shifts             StaffShift[]
+  createdTasks       InternalTask[]   @relation("CreatedTasks")
+  assignedTasks      InternalTask[]   @relation("AssignedTasks")
+  comments           TaskComment[]
+  uploads            TaskAttachment[]
+  groupMemberships   StaffGroupMember[]
+  taskPhotos         TaskPhoto[]
+  cleaningAssignments Room[]          @relation("RoomCleaner")
+  inspectionAssignments Room[]        @relation("RoomInspector")
 
   @@unique([hotelId, email])
   @@index([hotelId, isActive])
@@ -631,6 +681,84 @@ model StaffShift {
 
   @@index([hotelId, isActive])
   @@map("staff_shifts")
+}
+
+// ──── Departments ─────────────────────────────────────────────
+
+model Department {
+  id        String   @id @default(uuid())
+  hotelId   String
+  slug      String
+  names     Json     // { "en": "Housekeeping", "uk": "Господарча служба", "ru": "Хозяйственная служба" }
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  hotel          Hotel          @relation(fields: [hotelId], references: [id])
+  staffGroups    StaffGroup[]
+  serviceCategories ServiceCategory[] @relation("CategoryDepartment")
+
+  @@unique([hotelId, slug])
+  @@map("departments")
+}
+
+// ──── Staff Groups ────────────────────────────────────────────
+
+enum GroupType {
+  FLOOR
+  SHIFT
+  SKILL
+  CUSTOM
+}
+
+enum HousekeepingStatus {
+  DIRTY
+  CLEANING
+  CLEANED
+  INSPECTED
+  READY
+  OUT_OF_ORDER
+  DO_NOT_DISTURB
+}
+
+enum OccupancyStatus {
+  VACANT
+  OCCUPIED
+  STAYOVER
+  CHECKOUT
+  CHECKIN
+}
+
+model StaffGroup {
+  id           String    @id @default(uuid())
+  hotelId      String
+  name         String
+  type         GroupType
+  departmentId String
+  floors       Int[]
+  shiftStart   String?
+  shiftEnd     String?
+  skills       String[]
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  hotel        Hotel       @relation(fields: [hotelId], references: [id])
+  department   Department  @relation(fields: [departmentId], references: [id])
+  members      StaffGroupMember[]
+
+  @@index([hotelId, departmentId])
+  @@map("staff_groups")
+}
+
+model StaffGroupMember {
+  id       String @id @default(uuid())
+  groupId  String
+  staffId  String
+
+  group    StaffGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  staff    StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, staffId])
+  @@map("staff_group_members")
 }
 
 // ──── Internal Tasks (non-guest) ─────────────────────────────
@@ -654,6 +782,27 @@ model InternalTask {
   completedAt   DateTime?
   closedAt      DateTime?
   holdReason    String?
+
+  // Phase 3: Enhanced fields
+  escalationLevel   Int       @default(0)
+  slaBreached       Boolean   @default(false)
+  etaMinutes        Int?
+  etaUpdatedAt      DateTime?
+  isBillable        Boolean   @default(false)
+  cost              Decimal?
+  currency          String?   @default("UAH")
+  rating            Int?
+  ratingComment     String?
+  ratedAt           DateTime?
+  source            String    @default("STAFF") // STAFF | BUTTON | CHAT | QR | SYSTEM
+  chatMessageId     String?
+  externalTmsId     String?
+  externalTmsType   String?
+  syncStatus        String    @default("NOT_SYNCED") // NOT_SYNCED | SYNCING | SYNCED | SYNC_FAILED
+  assigneeGroupId   String?
+  acceptedAt        DateTime?
+  roomId            String?    // Link to Room for cleaning tasks
+
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -662,11 +811,76 @@ model InternalTask {
   assignedTo   StaffMember?   @relation("AssignedTasks", fields: [assignedToId], references: [id])
   template     TaskTemplate?  @relation(fields: [templateId], references: [id])
   checklist    TaskChecklist?
+  room         Room?          @relation("RoomCleaningTasks", fields: [roomId], references: [id])
 
   @@index([hotelId, status])
   @@index([hotelId, department])
   @@index([assignedToId])
+  @@index([roomId])
   @@map("internal_tasks")
+}
+
+// ──── Rooms ─────────────────────────────────────────────────────
+model Room {
+  id                  String             @id @default(uuid())
+  hotelId             String
+  roomNumber          String
+  floor               Int
+  roomType            String?
+  maxOccupancy        Int?
+  isActive            Boolean            @default(true)
+
+  housekeepingStatus  HousekeepingStatus @default(READY)
+  occupancyStatus     OccupancyStatus    @default(VACANT)
+
+  assignedCleanerId   String?
+  assignedInspectorId String?
+
+  lastStatusChangedAt DateTime           @default(now())
+  lastCleanedAt       DateTime?
+  lastInspectedAt     DateTime?
+  estimatedReadyAt    DateTime?
+
+  isRush              Boolean            @default(false)
+  dndActive           Boolean            @default(false)
+  dndStartedAt        DateTime?
+  notes               String?
+
+  pmsRoomId           String?
+  lastPmsSyncAt       DateTime?
+
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  hotel               Hotel              @relation(fields: [hotelId], references: [id])
+  assignedCleaner     StaffMember?       @relation("RoomCleaner", fields: [assignedCleanerId], references: [id])
+  assignedInspector   StaffMember?       @relation("RoomInspector", fields: [assignedInspectorId], references: [id])
+  cleaningTasks       InternalTask[]     @relation("RoomCleaningTasks")
+  statusHistory       RoomStatusChange[]
+
+  @@unique([hotelId, roomNumber])
+  @@index([hotelId, floor])
+  @@index([hotelId, housekeepingStatus])
+  @@map("rooms")
+}
+
+model RoomStatusChange {
+  id               String              @id @default(uuid())
+  roomId           String
+  fromHousekeeping HousekeepingStatus?
+  toHousekeeping   HousekeepingStatus?
+  fromOccupancy    OccupancyStatus?
+  toOccupancy      OccupancyStatus?
+  changedByStaffId String?
+  changedBySystem  Boolean             @default(false)
+  source           String?
+  notes            String?
+  createdAt        DateTime            @default(now())
+
+  room             Room                @relation(fields: [roomId], references: [id])
+
+  @@index([roomId])
+  @@map("room_status_changes")
 }
 
 // ──── Task Templates & Checklists ────────────────────────────
@@ -749,6 +963,58 @@ model TaskComment {
   @@map("task_comments")
 }
 
+// ──── Task Photos ───────────────────────────────────────────
+
+model TaskPhoto {
+  id           String   @id @default(uuid())
+  taskId       String
+  taskType     String   // "INTERNAL" | "ORDER" | "SERVICE_REQUEST"
+  url          String
+  type         String   @default("issue") // "before" | "after" | "issue"
+  uploadedById String
+  uploadedAt   DateTime @default(now())
+  aiAnalysis   Json?
+
+  uploader     StaffMember @relation(fields: [uploadedById], references: [id])
+
+  @@index([taskId, taskType])
+  @@map("task_photos")
+}
+
+// ──── Task Notes (internal/guest-visible) ────────────────────
+
+model TaskNote {
+  id         String   @id @default(uuid())
+  taskId     String
+  taskType   String   // "INTERNAL" | "ORDER" | "SERVICE_REQUEST"
+  authorId   String
+  authorType String   @default("staff") // "staff" | "guest" | "system"
+  content    String
+  isInternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([taskId, taskType])
+  @@map("task_notes")
+}
+
+// ──── Task Status Change (Audit Trail) ──────────────────────
+
+model TaskStatusChange {
+  id             String   @id @default(uuid())
+  taskId         String
+  taskType       String   // "INTERNAL" | "ORDER" | "SERVICE_REQUEST"
+  fromStatus     String?
+  toStatus       String
+  changedById    String?
+  changedByType  String   @default("system") // "staff" | "guest" | "system" | "external"
+  reason         String?
+  syncedToExternal Boolean @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([taskId, taskType])
+  @@map("task_status_changes")
+}
+
 // ──── TMS Configuration ──────────────────────────────────────
 
 model HotelTMSConfig {
@@ -758,6 +1024,18 @@ model HotelTMSConfig {
   credentials     Json
   enabled         Boolean  @default(false)
   categoryMapping Json     @default("{}")
+
+  // Phase 3+7: Extended config
+  mode                String   @default("BUILT_IN") // BUILT_IN | EXTERNAL | HYBRID
+  webhookSecret       String?
+  outgoingWebhookUrl  String?
+  departmentMappings  Json?
+  staffMappings       Json?
+  hybridCategorySlugs String[]
+  pollingEnabled      Boolean  @default(false)
+  pollingIntervalMs   Int      @default(30000)
+  slaConfig           Json?    // { defaultSlaMinutes, escalationChain: [...] }
+  escalationChain     Json?    // [{ level: 1, role: 'SUPERVISOR', timeoutMin: 15 }, ...]
 
   hotel           Hotel    @relation(fields: [hotelId], references: [id])
 
