@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { getTasks, assignTask } from '../../../src/api/staffApi';
 import { AssignModal } from '../../../src/components/AssignModal';
 import { CreateTaskModal } from '../../../src/components/CreateTaskModal';
@@ -24,12 +25,12 @@ type UnifiedTask = {
   slaMinutes?: number;
 };
 
-const COLUMNS: { key: string; label: string; statuses: string[] }[] = [
-  { key: 'new',        label: 'New',        statuses: ['NEW'] },
-  { key: 'assigned',   label: 'Assigned',   statuses: ['ASSIGNED'] },
-  { key: 'active',     label: 'In Progress', statuses: ['IN_PROGRESS'] },
-  { key: 'hold',       label: 'On Hold',    statuses: ['ON_HOLD'] },
-  { key: 'done',       label: 'Done',       statuses: ['COMPLETED', 'INSPECTED', 'CLOSED'] },
+const COLUMN_KEYS = [
+  { key: 'new',      tKey: 'new',      statuses: ['NEW'] },
+  { key: 'assigned', tKey: 'assigned', statuses: ['ASSIGNED'] },
+  { key: 'active',   tKey: 'active',   statuses: ['IN_PROGRESS'] },
+  { key: 'hold',     tKey: 'hold',     statuses: ['ON_HOLD'] },
+  { key: 'done',     tKey: 'done',     statuses: ['COMPLETED', 'INSPECTED', 'CLOSED'] },
 ];
 
 const COLUMN_ACCENT: Record<string, string> = {
@@ -49,6 +50,7 @@ function TaskCard({
   onPress: () => void;
   onAssign: () => void;
 }) {
+  const { t } = useTranslation();
   const age = Math.floor((Date.now() - new Date(task.createdAt).getTime()) / 60000);
   const ageStr = age < 60 ? `${age}m` : `${Math.floor(age / 60)}h`;
 
@@ -84,7 +86,7 @@ function TaskCard({
           ) : (
             <TouchableOpacity style={styles.assignBtn} onPress={onAssign}>
               <MaterialIcons name="person-add" size={13} color={colors.primary} />
-              <Text style={styles.assignBtnText}>Assign</Text>
+              <Text style={styles.assignBtnText}>{t('kanban.assign')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -94,6 +96,7 @@ function TaskCard({
 }
 
 export default function KanbanScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -118,6 +121,8 @@ export default function KanbanScreen() {
     },
   });
 
+  const COLUMNS = COLUMN_KEYS.map(col => ({ ...col, label: t(`kanban.${col.tKey}`) }));
+
   const grouped = COLUMNS.reduce<Record<string, UnifiedTask[]>>((acc, col) => {
     acc[col.key] = tasks.filter(t => col.statuses.includes(t.status));
     return acc;
@@ -133,7 +138,7 @@ export default function KanbanScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Board</Text>
+          <Text style={styles.headerTitle}>{t('kanban.title')}</Text>
         </View>
         <ActivityIndicator style={{ marginTop: 60 }} color={colors.primary} />
       </SafeAreaView>
@@ -176,7 +181,7 @@ export default function KanbanScreen() {
               >
                 {colTasks.length === 0 ? (
                   <View style={styles.emptyCol}>
-                    <Text style={styles.emptyColText}>Empty</Text>
+                    <Text style={styles.emptyColText}>{t('kanban.empty')}</Text>
                   </View>
                 ) : (
                   colTasks.map(task => (

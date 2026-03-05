@@ -1,0 +1,202 @@
+{
+  "login": {
+    "title": "HotelMol Staff",
+    "subtitle": "Hotel Operations Platform",
+    "formTitle": "Sign In",
+    "hotelId": "Hotel ID",
+    "hotelIdPlaceholder": "e.g. grand-plaza",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "password": "Password",
+    "signIn": "Sign In",
+    "pinLogin": "Login with PIN (shared device)",
+    "error": "Error",
+    "fillFields": "Please fill in all fields",
+    "loginFailed": "Login Failed",
+    "invalidCredentials": "Invalid credentials"
+  },
+  "pinLogin": {
+    "title": "Quick PIN Login",
+    "subtitle": "For shared devices on shift",
+    "hotelIdPlaceholder": "Hotel ID (e.g. grand-plaza)",
+    "enterPin": "Enter your {{length}}-digit PIN",
+    "signingIn": "Signing in...",
+    "wrongPin": "Wrong PIN",
+    "tryAgain": "Please try again",
+    "errorHotelId": "Enter Hotel ID first",
+    "error": "Error"
+  },
+  "tabs": {
+    "tasks": "Tasks",
+    "board": "Board",
+    "team": "Team",
+    "rooms": "Rooms",
+    "settings": "Settings"
+  },
+  "tasks": {
+    "greeting": "Hello, {{name}}",
+    "newAndActive": "{{newCount}} new · {{activeCount}} in progress",
+    "onlyActive": "{{activeCount}} in progress",
+    "loading": "Loading...",
+    "noTasks": "No tasks",
+    "signOut": "Sign Out",
+    "signOutConfirm": "Are you sure?",
+    "cancel": "Cancel",
+    "completeTask": "Complete Task",
+    "completeConfirm": "Mark this task as completed?",
+    "complete": "Complete",
+    "error": "Error",
+    "takeError": "Failed to take task",
+    "completeError": "Failed to complete task",
+    "take": "Take",
+    "done": "Done",
+    "room": "Room {{number}}",
+    "justNow": "Just now",
+    "minutesAgo": "{{n}}m ago",
+    "hoursAgo": "{{n}}h ago"
+  },
+  "filter": {
+    "all": "All",
+    "mine": "Mine",
+    "new": "New",
+    "active": "Active"
+  },
+  "taskDetail": {
+    "location": "Location",
+    "room": "Room {{number}}",
+    "department": "Department",
+    "assignedTo": "Assigned to",
+    "due": "Due",
+    "guest": "Guest",
+    "items": "ITEMS",
+    "note": "NOTE",
+    "roomStatus": "ROOM STATUS",
+    "markCleaned": "✓ Mark Cleaned",
+    "checklist": "CHECKLIST",
+    "checklistWarning": "Complete all items before finishing",
+    "comments": "COMMENTS ({{count}})",
+    "commentPlaceholder": "Add a comment...",
+    "reasonForHold": "Reason for hold",
+    "holdPlaceholder": "e.g. Waiting for supplies...",
+    "cancel": "Cancel",
+    "putOnHold": "Put on Hold",
+    "hold": "Hold",
+    "takeStart": "Take & Start",
+    "start": "Start",
+    "markComplete": "Mark Complete",
+    "close": "Close",
+    "error": "Error",
+    "updateError": "Failed to update status",
+    "roomUpdated": "Done",
+    "roomUpdatedMsg": "Room status updated",
+    "holdRequired": "Required",
+    "holdRequiredMsg": "Please enter a reason for hold"
+  },
+  "kanban": {
+    "title": "Board",
+    "assign": "Assign",
+    "empty": "Empty",
+    "new": "New",
+    "assigned": "Assigned",
+    "active": "In Progress",
+    "hold": "On Hold",
+    "done": "Done"
+  },
+  "team": {
+    "title": "Team on Shift",
+    "staffActive": "{{count}} staff active",
+    "noStaff": "No staff on shift",
+    "noStaffDesc": "Staff will appear here once they start their shift",
+    "floor": "Floor {{number}}",
+    "free": "Free",
+    "tasks": "{{count}} tasks"
+  },
+  "housekeeping": {
+    "title": "Housekeeping",
+    "allFloors": "All",
+    "allStatus": "All Status",
+    "noRooms": "No rooms found",
+    "rush": "RUSH",
+    "floor": "F{{number}}",
+    "status": {
+      "DIRTY": "Dirty",
+      "CLEANING": "Cleaning",
+      "CLEANED": "Cleaned",
+      "INSPECTED": "Inspected",
+      "READY": "Ready",
+      "OUT_OF_ORDER": "OOO",
+      "DO_NOT_DISTURB": "DND"
+    },
+    "actions": {
+      "DIRTY": "Start Cleaning",
+      "CLEANING": "Mark Cleaned",
+      "CLEANED": "Inspect",
+      "INSPECTED": "Mark Ready"
+    }
+  },
+  "shiftBar": {
+    "onShift": "On shift · {{elapsed}}",
+    "end": "End",
+    "startShift": "Start Shift",
+    "notOnShift": "You're not on shift",
+    "endShift": "End Shift",
+    "endConfirm": "You've been on shift for {{elapsed}}. End now?",
+    "cancel": "Cancel",
+    "error": "Error",
+    "startError": "Failed to start shift",
+    "endError": "Failed to end shift"
+  },
+  "createTask": {
+    "title": "New Task",
+    "useTemplate": "Use Template (optional)",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "e.g. Clean room 302",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Additional details...",
+    "roomLabel": "Room Number",
+    "roomPlaceholder": "e.g. 302",
+    "deptLabel": "Department",
+    "priorityLabel": "Priority",
+    "autoAssign": "Auto-assign",
+    "autoAssignDesc": "Let the system pick the best staff member",
+    "assignedTo": "Will be assigned to selected staff member",
+    "createTask": "Create Task",
+    "error": "Error",
+    "createError": "Failed to create task. Please try again."
+  },
+  "assignModal": {
+    "title": "Assign Task",
+    "noStaff": "No staff on shift"
+  },
+  "templatePicker": {
+    "title": "Choose Template",
+    "noTemplates": "No templates configured",
+    "noTemplatesHint": "Ask your GM to add task templates",
+    "steps": "{{count}} steps",
+    "sla": "{{minutes}}m SLA"
+  },
+  "departments": {
+    "HOUSEKEEPING": "Housekeeping",
+    "MAINTENANCE": "Maintenance",
+    "FOOD_AND_BEVERAGE": "Food & Beverage",
+    "FRONT_OFFICE": "Front Office",
+    "SECURITY": "Security",
+    "MANAGEMENT": "Management"
+  },
+  "roles": {
+    "LINE_STAFF": "Line Staff",
+    "SUPERVISOR": "Supervisor",
+    "HEAD_OF_DEPT": "Head of Dept",
+    "GENERAL_MANAGER": "GM",
+    "RECEPTIONIST": "Receptionist"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "version": "HotelMol Staff v1.0.0",
+    "account": "Account",
+    "signOut": "Sign Out",
+    "signOutConfirm": "Are you sure?",
+    "cancel": "Cancel"
+  }
+}

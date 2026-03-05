@@ -5,6 +5,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { getOnlineStaff } from '../../../src/api/staffApi';
 import { CreateTaskModal } from '../../../src/components/CreateTaskModal';
 import { colors, spacing, radius } from '../../../src/theme';
@@ -29,13 +30,7 @@ const DEPT_ICON: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   MANAGEMENT: 'manage-accounts',
 };
 
-const ROLE_LABEL: Record<string, string> = {
-  LINE_STAFF: 'Line Staff',
-  SUPERVISOR: 'Supervisor',
-  HEAD_OF_DEPT: 'Head of Dept',
-  GENERAL_MANAGER: 'GM',
-  RECEPTIONIST: 'Receptionist',
-};
+// ROLE_LABEL is now handled via i18n t('roles.X')
 
 function loadColor(count: number) {
   if (count === 0) return colors.textTertiary;
@@ -44,16 +39,11 @@ function loadColor(count: number) {
   return colors.error;
 }
 
-function loadLabel(count: number) {
-  if (count === 0) return 'Free';
-  if (count <= 2) return `${count} tasks`;
-  if (count <= 4) return `${count} tasks`;
-  return `${count} tasks`;
-}
-
 function StaffRow({ member, onCreateTask }: { member: OnlineStaff; onCreateTask: () => void }) {
+  const { t } = useTranslation();
   const icon = DEPT_ICON[member.department] ?? 'person';
   const lc = loadColor(member.activeTaskCount);
+  const loadLabel = (count: number) => count === 0 ? t('team.free') : t('team.tasks', { count });
 
   return (
     <View style={styles.row}>
@@ -69,15 +59,15 @@ function StaffRow({ member, onCreateTask }: { member: OnlineStaff; onCreateTask:
         <Text style={styles.name}>{member.firstName} {member.lastName}</Text>
         <View style={styles.metaRow}>
           <MaterialIcons name={icon} size={12} color={colors.textTertiary} />
-          <Text style={styles.dept}>{member.department.replace(/_/g, ' ')}</Text>
+          <Text style={styles.dept}>{t(`departments.${member.department}`, { defaultValue: member.department.replace(/_/g, ' ') })}</Text>
           {member.assignedFloor && (
             <>
               <Text style={styles.dot}>·</Text>
-              <Text style={styles.dept}>Floor {member.assignedFloor}</Text>
+              <Text style={styles.dept}>{t('team.floor', { number: member.assignedFloor })}</Text>
             </>
           )}
         </View>
-        <Text style={styles.roleText}>{ROLE_LABEL[member.role] || member.role}</Text>
+        <Text style={styles.roleText}>{t(`roles.${member.role}`, { defaultValue: member.role })}</Text>
       </View>
 
       {/* Load + actions */}
@@ -86,6 +76,7 @@ function StaffRow({ member, onCreateTask }: { member: OnlineStaff; onCreateTask:
           <Text style={[styles.loadText, { color: lc }]}>
             {loadLabel(member.activeTaskCount)}
           </Text>
+
         </View>
         <TouchableOpacity style={styles.taskBtn} onPress={onCreateTask}>
           <MaterialIcons name="add-task" size={18} color={colors.primary} />
@@ -96,6 +87,7 @@ function StaffRow({ member, onCreateTask }: { member: OnlineStaff; onCreateTask:
 }
 
 export default function TeamScreen() {
+  const { t } = useTranslation();
   const [createFor, setCreateFor] = useState<string | null>(null);
 
   const { data: staff = [], isLoading, refetch, isRefetching } = useQuery({
@@ -122,8 +114,8 @@ export default function TeamScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Team on Shift</Text>
-          <Text style={styles.headerSub}>{staff.length} staff active</Text>
+          <Text style={styles.headerTitle}>{t('team.title')}</Text>
+          <Text style={styles.headerSub}>{t('team.staffActive', { count: staff.length })}</Text>
         </View>
         <TouchableOpacity onPress={() => refetch()} style={styles.refreshBtn}>
           <MaterialIcons name="refresh" size={22} color={colors.textSecondary} />
@@ -135,8 +127,8 @@ export default function TeamScreen() {
       ) : staff.length === 0 ? (
         <View style={styles.empty}>
           <MaterialIcons name="people-outline" size={48} color={colors.textTertiary} />
-          <Text style={styles.emptyTitle}>No staff on shift</Text>
-          <Text style={styles.emptyText}>Staff will appear here once they start their shift</Text>
+          <Text style={styles.emptyTitle}>{t('team.noStaff')}</Text>
+          <Text style={styles.emptyText}>{t('team.noStaffDesc')}</Text>
         </View>
       ) : (
         <FlatList
@@ -152,7 +144,7 @@ export default function TeamScreen() {
                   color={colors.textSecondary}
                 />
                 <Text style={styles.sectionTitle}>
-                  {dept.replace(/_/g, ' ')}
+                  {t(`departments.${dept}`, { defaultValue: dept.replace(/_/g, ' ') })}
                 </Text>
                 <Text style={styles.sectionCount}>{members.length}</Text>
               </View>

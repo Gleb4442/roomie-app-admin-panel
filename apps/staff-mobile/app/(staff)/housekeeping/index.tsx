@@ -5,31 +5,30 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { getMyRooms, updateRoomStatus } from '../../../src/api/staffApi';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, spacing, radius } from '../../../src/theme';
 
 type HKStatus = 'DIRTY' | 'CLEANING' | 'CLEANED' | 'INSPECTED' | 'READY' | 'OUT_OF_ORDER' | 'DO_NOT_DISTURB';
 
-const STATUS_CFG: Record<HKStatus, { label: string; color: string; bg: string }> = {
-  DIRTY:          { label: 'Dirty',     color: '#EF4444', bg: 'rgba(239,68,68,0.12)' },
-  CLEANING:       { label: 'Cleaning',  color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-  CLEANED:        { label: 'Cleaned',   color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
-  INSPECTED:      { label: 'Inspected', color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)' },
-  READY:          { label: 'Ready',     color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
-  OUT_OF_ORDER:   { label: 'OOO',       color: '#6B7280', bg: 'rgba(107,114,128,0.12)' },
-  DO_NOT_DISTURB: { label: 'DND',       color: '#F97316', bg: 'rgba(249,115,22,0.12)' },
+const STATUS_COLOR: Record<HKStatus, { color: string; bg: string }> = {
+  DIRTY:          { color: '#EF4444', bg: 'rgba(239,68,68,0.12)' },
+  CLEANING:       { color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
+  CLEANED:        { color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
+  INSPECTED:      { color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)' },
+  READY:          { color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
+  OUT_OF_ORDER:   { color: '#6B7280', bg: 'rgba(107,114,128,0.12)' },
+  DO_NOT_DISTURB: { color: '#F97316', bg: 'rgba(249,115,22,0.12)' },
 };
 
-const SUPERVISOR_ACTIONS: Record<string, { next: HKStatus; label: string }> = {
-  DIRTY:    { next: 'CLEANING',  label: 'Start Cleaning' },
-  CLEANING: { next: 'CLEANED',   label: 'Mark Cleaned' },
-  CLEANED:  { next: 'INSPECTED', label: 'Inspect' },
-  INSPECTED:{ next: 'READY',     label: 'Mark Ready' },
+const SUPERVISOR_NEXT: Record<string, HKStatus> = {
+  DIRTY: 'CLEANING', CLEANING: 'CLEANED', CLEANED: 'INSPECTED', INSPECTED: 'READY',
 };
 
 export default function HousekeepingScreen() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { staff } = useAuthStore();
   const queryClient = useQueryClient();
   const [floorFilter, setFloorFilter] = useState<number | null>(null);
@@ -60,21 +59,23 @@ export default function HousekeepingScreen() {
   );
 
   const renderRoom = ({ item: room }: { item: any }) => {
-    const cfg = STATUS_CFG[room.housekeepingStatus as HKStatus] ?? STATUS_CFG.DIRTY;
-    const action = isSupervisor ? SUPERVISOR_ACTIONS[room.housekeepingStatus] : null;
+    const status = room.housekeepingStatus as HKStatus;
+    const cfg = STATUS_COLOR[status] ?? STATUS_COLOR.DIRTY;
+    const nextStatus = isSupervisor ? SUPERVISOR_NEXT[status] : null;
+    const action = nextStatus ? { next: nextStatus, label: t(`housekeeping.actions.${status}`) } : null;
 
     return (
       <View style={[styles.roomCard, { backgroundColor: cfg.bg }]}>
         <View style={styles.roomHeader}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Text style={styles.roomNumber}>{room.roomNumber}</Text>
-            <Text style={styles.roomFloor}>F{room.floor}</Text>
+            <Text style={styles.roomFloor}>{t('housekeeping.floor', { number: room.floor })}</Text>
             {room.isRush && (
-              <View style={styles.rushBadge}><Text style={styles.rushText}>RUSH</Text></View>
+              <View style={styles.rushBadge}><Text style={styles.rushText}>{t('housekeeping.rush')}</Text></View>
             )}
           </View>
           <View style={[styles.statusBadge, { backgroundColor: `${cfg.color}22` }]}>
-            <Text style={[styles.statusBadgeText, { color: cfg.color }]}>{cfg.label}</Text>
+            <Text style={[styles.statusBadgeText, { color: cfg.color }]}>{t(`housekeeping.status.${status}`)}</Text>
           </View>
         </View>
 
@@ -103,7 +104,7 @@ export default function HousekeepingScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Housekeeping</Text>
+        <Text style={styles.headerTitle}>{t('housekeeping.title')}</Text>
         {isLoading && <ActivityIndicator size="small" color={colors.primary} />}
       </View>
 
@@ -121,7 +122,7 @@ export default function HousekeepingScreen() {
               style={[styles.filterChip, floorFilter === f && styles.filterChipActive]}
             >
               <Text style={[styles.filterChipText, floorFilter === f && styles.filterChipTextActive]}>
-                {f === null ? 'All' : `F${f}`}
+                {f === null ? t('housekeeping.allFloors') : t('housekeeping.floor', { number: f })}
               </Text>
             </TouchableOpacity>
           )}
@@ -132,19 +133,19 @@ export default function HousekeepingScreen() {
       <View style={styles.filters}>
         <FlatList
           horizontal
-          data={[null, ...Object.keys(STATUS_CFG)] as (HKStatus | null)[]}
+          data={[null, ...Object.keys(STATUS_COLOR)] as (HKStatus | null)[]}
           keyExtractor={s => String(s)}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8, paddingHorizontal: spacing.xl }}
           renderItem={({ item: s }) => {
-            const cfg = s ? STATUS_CFG[s] : null;
+            const cfg = s ? STATUS_COLOR[s] : null;
             return (
               <TouchableOpacity
                 onPress={() => setStatusFilter(s)}
                 style={[styles.filterChip, statusFilter === s && { backgroundColor: cfg?.bg ?? 'rgba(240,165,0,0.12)', borderColor: cfg?.color ?? colors.primary }]}
               >
                 <Text style={[styles.filterChipText, statusFilter === s && { color: cfg?.color ?? colors.primary }]}>
-                  {s === null ? 'All Status' : STATUS_CFG[s].label}
+                  {s === null ? t('housekeeping.allStatus') : t(`housekeeping.status.${s}`)}
                 </Text>
               </TouchableOpacity>
             );
@@ -162,7 +163,7 @@ export default function HousekeepingScreen() {
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>No rooms found</Text>
+            <Text style={styles.emptyText}>{t('housekeeping.noRooms')}</Text>
           </View>
         }
       />

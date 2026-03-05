@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { getTemplates } from '../api/staffApi';
 import { colors, spacing, radius } from '../theme';
 
@@ -34,6 +35,7 @@ const DEPT_ICON: Record<string, keyof typeof MaterialIcons.glyphMap> = {
 };
 
 export function TemplatePickerModal({ visible, onSelect, onClose }: Props) {
+  const { t } = useTranslation();
   const { data: templates = [], isLoading } = useQuery({
     queryKey: ['templates'],
     queryFn: async () => {
@@ -50,7 +52,7 @@ export function TemplatePickerModal({ visible, onSelect, onClose }: Props) {
       <View style={styles.sheet}>
         <View style={styles.handle} />
         <View style={styles.header}>
-          <Text style={styles.title}>Choose Template</Text>
+          <Text style={styles.title}>{t('templatePicker.title')}</Text>
           <TouchableOpacity onPress={onClose}>
             <MaterialIcons name="close" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
@@ -61,8 +63,8 @@ export function TemplatePickerModal({ visible, onSelect, onClose }: Props) {
         ) : templates.length === 0 ? (
           <View style={styles.empty}>
             <MaterialIcons name="content-paste-off" size={40} color={colors.textTertiary} />
-            <Text style={styles.emptyText}>No templates configured</Text>
-            <Text style={styles.emptyHint}>Ask your GM to add task templates</Text>
+            <Text style={styles.emptyText}>{t('templatePicker.noTemplates')}</Text>
+            <Text style={styles.emptyHint}>{t('templatePicker.noTemplatesHint')}</Text>
           </View>
         ) : (
           <FlatList
@@ -85,14 +87,14 @@ export function TemplatePickerModal({ visible, onSelect, onClose }: Props) {
                     {item.checklistItems.length > 0 && (
                       <>
                         <Text style={styles.dot}>·</Text>
-                        <Text style={styles.metaText}>{item.checklistItems.length} steps</Text>
+                        <Text style={styles.metaText}>{t('templatePicker.steps', { count: item.checklistItems.length })}</Text>
                       </>
                     )}
                     {item.slaMinutes && (
                       <>
                         <Text style={styles.dot}>·</Text>
                         <MaterialIcons name="timer" size={11} color={colors.textTertiary} />
-                        <Text style={styles.metaText}>{item.slaMinutes}m SLA</Text>
+                        <Text style={styles.metaText}>{t('templatePicker.sla', { minutes: item.slaMinutes })}</Text>
                       </>
                     )}
                   </View>

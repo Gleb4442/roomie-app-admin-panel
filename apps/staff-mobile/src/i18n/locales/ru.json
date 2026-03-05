@@ -1,0 +1,202 @@
+{
+  "login": {
+    "title": "HotelMol Staff",
+    "subtitle": "Платформа управления отелем",
+    "formTitle": "Войти",
+    "hotelId": "ID отеля",
+    "hotelIdPlaceholder": "напр. grand-plaza",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "password": "Пароль",
+    "signIn": "Войти",
+    "pinLogin": "Вход по PIN (общее устройство)",
+    "error": "Ошибка",
+    "fillFields": "Заполните все поля",
+    "loginFailed": "Ошибка входа",
+    "invalidCredentials": "Неверные данные"
+  },
+  "pinLogin": {
+    "title": "Быстрый вход по PIN",
+    "subtitle": "Для общих устройств на смене",
+    "hotelIdPlaceholder": "ID отеля (напр. grand-plaza)",
+    "enterPin": "Введите {{length}}-значный PIN",
+    "signingIn": "Вход...",
+    "wrongPin": "Неверный PIN",
+    "tryAgain": "Попробуйте снова",
+    "errorHotelId": "Сначала введите ID отеля",
+    "error": "Ошибка"
+  },
+  "tabs": {
+    "tasks": "Задачи",
+    "board": "Доска",
+    "team": "Команда",
+    "rooms": "Номера",
+    "settings": "Настройки"
+  },
+  "tasks": {
+    "greeting": "Привет, {{name}}",
+    "newAndActive": "{{newCount}} новых · {{activeCount}} в работе",
+    "onlyActive": "{{activeCount}} в работе",
+    "loading": "Загрузка...",
+    "noTasks": "Нет задач",
+    "signOut": "Выйти",
+    "signOutConfirm": "Вы уверены?",
+    "cancel": "Отмена",
+    "completeTask": "Завершить задачу",
+    "completeConfirm": "Отметить задачу выполненной?",
+    "complete": "Выполнить",
+    "error": "Ошибка",
+    "takeError": "Не удалось взять задачу",
+    "completeError": "Не удалось завершить задачу",
+    "take": "Взять",
+    "done": "Готово",
+    "room": "Номер {{number}}",
+    "justNow": "Только что",
+    "minutesAgo": "{{n}} мин",
+    "hoursAgo": "{{n}} ч"
+  },
+  "filter": {
+    "all": "Все",
+    "mine": "Мои",
+    "new": "Новые",
+    "active": "Активные"
+  },
+  "taskDetail": {
+    "location": "Место",
+    "room": "Номер {{number}}",
+    "department": "Отдел",
+    "assignedTo": "Назначено",
+    "due": "Срок",
+    "guest": "Гость",
+    "items": "ПОЗИЦИИ",
+    "note": "ЗАМЕТКА",
+    "roomStatus": "СТАТУС НОМЕРА",
+    "markCleaned": "✓ Убрано",
+    "checklist": "ЧЕКЛИСТ",
+    "checklistWarning": "Выполните все пункты перед завершением",
+    "comments": "КОММЕНТАРИИ ({{count}})",
+    "commentPlaceholder": "Добавить комментарий...",
+    "reasonForHold": "Причина паузы",
+    "holdPlaceholder": "напр. Ожидаем материалы...",
+    "cancel": "Отмена",
+    "putOnHold": "Поставить на паузу",
+    "hold": "Пауза",
+    "takeStart": "Взять и начать",
+    "start": "Начать",
+    "markComplete": "Выполнено",
+    "close": "Закрыть",
+    "error": "Ошибка",
+    "updateError": "Не удалось обновить статус",
+    "roomUpdated": "Готово",
+    "roomUpdatedMsg": "Статус номера обновлён",
+    "holdRequired": "Обязательно",
+    "holdRequiredMsg": "Укажите причину паузы"
+  },
+  "kanban": {
+    "title": "Доска",
+    "assign": "Назначить",
+    "empty": "Пусто",
+    "new": "Новые",
+    "assigned": "Назначено",
+    "active": "В работе",
+    "hold": "На паузе",
+    "done": "Выполнено"
+  },
+  "team": {
+    "title": "Команда на смене",
+    "staffActive": "{{count}} сотрудников активно",
+    "noStaff": "Нет сотрудников на смене",
+    "noStaffDesc": "Сотрудники появятся здесь после начала смены",
+    "floor": "Этаж {{number}}",
+    "free": "Свободен",
+    "tasks": "{{count}} задач"
+  },
+  "housekeeping": {
+    "title": "Горничные",
+    "allFloors": "Все",
+    "allStatus": "Все статусы",
+    "noRooms": "Номера не найдены",
+    "rush": "СРОЧНО",
+    "floor": "Э{{number}}",
+    "status": {
+      "DIRTY": "Грязный",
+      "CLEANING": "Уборка",
+      "CLEANED": "Убран",
+      "INSPECTED": "Проверен",
+      "READY": "Готов",
+      "OUT_OF_ORDER": "ВРЕ",
+      "DO_NOT_DISTURB": "ДНБ"
+    },
+    "actions": {
+      "DIRTY": "Начать уборку",
+      "CLEANING": "Убран",
+      "CLEANED": "Проверить",
+      "INSPECTED": "Готов"
+    }
+  },
+  "shiftBar": {
+    "onShift": "На смене · {{elapsed}}",
+    "end": "Завершить",
+    "startShift": "Начать смену",
+    "notOnShift": "Вы не на смене",
+    "endShift": "Завершить смену",
+    "endConfirm": "Вы на смене {{elapsed}}. Завершить?",
+    "cancel": "Отмена",
+    "error": "Ошибка",
+    "startError": "Не удалось начать смену",
+    "endError": "Не удалось завершить смену"
+  },
+  "createTask": {
+    "title": "Новая задача",
+    "useTemplate": "Использовать шаблон (по желанию)",
+    "titleLabel": "Название *",
+    "titlePlaceholder": "напр. Убрать номер 302",
+    "descriptionLabel": "Описание",
+    "descriptionPlaceholder": "Дополнительные детали...",
+    "roomLabel": "Номер комнаты",
+    "roomPlaceholder": "напр. 302",
+    "deptLabel": "Отдел",
+    "priorityLabel": "Приоритет",
+    "autoAssign": "Авто-назначение",
+    "autoAssignDesc": "Система выберет лучшего сотрудника",
+    "assignedTo": "Будет назначено выбранному сотруднику",
+    "createTask": "Создать задачу",
+    "error": "Ошибка",
+    "createError": "Не удалось создать задачу. Попробуйте снова."
+  },
+  "assignModal": {
+    "title": "Назначить задачу",
+    "noStaff": "Нет сотрудников на смене"
+  },
+  "templatePicker": {
+    "title": "Выбрать шаблон",
+    "noTemplates": "Нет шаблонов",
+    "noTemplatesHint": "Попросите GM добавить шаблоны задач",
+    "steps": "{{count}} шагов",
+    "sla": "{{minutes}} мин SLA"
+  },
+  "departments": {
+    "HOUSEKEEPING": "Горничные",
+    "MAINTENANCE": "Техслужба",
+    "FOOD_AND_BEVERAGE": "Питание",
+    "FRONT_OFFICE": "Ресепшн",
+    "SECURITY": "Охрана",
+    "MANAGEMENT": "Управление"
+  },
+  "roles": {
+    "LINE_STAFF": "Персонал",
+    "SUPERVISOR": "Супервайзер",
+    "HEAD_OF_DEPT": "Руководитель",
+    "GENERAL_MANAGER": "GM",
+    "RECEPTIONIST": "Ресепшионист"
+  },
+  "settings": {
+    "title": "Настройки",
+    "language": "Язык",
+    "version": "HotelMol Staff v1.0.0",
+    "account": "Аккаунт",
+    "signOut": "Выйти",
+    "signOutConfirm": "Вы уверены?",
+    "cancel": "Отмена"
+  }
+}

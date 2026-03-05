@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { createTask } from '../api/staffApi';
 import { TemplatePickerModal, Template } from './TemplatePickerModal';
 import { colors, spacing, radius } from '../theme';
@@ -39,6 +40,7 @@ const PRIORITY_COLOR: Record<string, string> = {
 };
 
 export function CreateTaskModal({ visible, onClose, onCreated, preAssignStaffId }: Props) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [department, setDepartment] = useState('HOUSEKEEPING');
@@ -82,7 +84,7 @@ export function CreateTaskModal({ visible, onClose, onCreated, preAssignStaffId 
       onCreated();
     },
     onError: () => {
-      Alert.alert('Error', 'Failed to create task. Please try again.');
+      Alert.alert(t('createTask.error'), t('createTask.createError'));
     },
   });
 
@@ -112,7 +114,7 @@ export function CreateTaskModal({ visible, onClose, onCreated, preAssignStaffId 
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>New Task</Text>
+          <Text style={styles.title}>{t('createTask.title')}</Text>
           <TouchableOpacity onPress={handleClose}>
             <MaterialIcons name="close" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
@@ -134,16 +136,16 @@ export function CreateTaskModal({ visible, onClose, onCreated, preAssignStaffId 
               onPress={() => setShowTemplatePicker(true)}
             >
               <MaterialIcons name="content-paste" size={16} color={colors.textSecondary} />
-              <Text style={styles.templateBtnText}>Use Template (optional)</Text>
+              <Text style={styles.templateBtnText}>{t('createTask.useTemplate')}</Text>
               <MaterialIcons name="chevron-right" size={16} color={colors.textTertiary} />
             </TouchableOpacity>
           )}
 
           {/* Title */}
-          <Text style={styles.label}>Title *</Text>
+          <Text style={styles.label}>{t('createTask.titleLabel')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g. Clean room 302"
+            placeholder={t('createTask.titlePlaceholder')}
             placeholderTextColor={colors.textTertiary}
             value={title}
             onChangeText={setTitle}
@@ -151,10 +153,10 @@ export function CreateTaskModal({ visible, onClose, onCreated, preAssignStaffId 
           />
 
           {/* Description */}
-          <Text style={styles.label}>Description</Text>
+          <Text style={styles.label}>{t('createTask.descriptionLabel')}</Text>
           <TextInput
             style={[styles.input, styles.multiline]}
-            placeholder="Additional details..."
+            placeholder={t('createTask.descriptionPlaceholder')}
             placeholderTextColor={colors.textTertiary}
             value={description}
             onChangeText={setDescription}
@@ -163,10 +165,10 @@ export function CreateTaskModal({ visible, onClose, onCreated, preAssignStaffId 
           />
 
           {/* Room Number */}
-          <Text style={styles.label}>Room Number</Text>
+          <Text style={styles.label}>{t('createTask.roomLabel')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g. 302"
+            placeholder={t('createTask.roomPlaceholder')}
             placeholderTextColor={colors.textTertiary}
             value={roomNumber}
             onChangeText={setRoomNumber}
@@ -174,7 +176,7 @@ export function CreateTaskModal({ visible, onClose, onCreated, preAssignStaffId 
           />
 
           {/* Department */}
-          <Text style={styles.label}>Department</Text>
+          <Text style={styles.label}>{t('createTask.deptLabel')}</Text>
           <View style={styles.chipRow}>
             {DEPARTMENTS.map(d => (
               <TouchableOpacity
@@ -183,14 +185,14 @@ export function CreateTaskModal({ visible, onClose, onCreated, preAssignStaffId 
                 onPress={() => setDepartment(d)}
               >
                 <Text style={[styles.chipText, department === d && styles.chipTextActive]}>
-                  {DEPT_LABEL[d]}
+                  {t(`departments.${d}`)}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
           {/* Priority */}
-          <Text style={styles.label}>Priority</Text>
+          <Text style={styles.label}>{t('createTask.priorityLabel')}</Text>
           <View style={styles.priorityRow}>
             {PRIORITIES.map(p => (
               <TouchableOpacity
@@ -214,13 +216,13 @@ export function CreateTaskModal({ visible, onClose, onCreated, preAssignStaffId 
           {preAssignStaffId ? (
             <View style={styles.autoAssignNote}>
               <MaterialIcons name="person-pin" size={16} color={colors.primary} />
-              <Text style={styles.autoAssignText}>Will be assigned to selected staff member</Text>
+              <Text style={styles.autoAssignText}>{t('createTask.assignedTo')}</Text>
             </View>
           ) : (
             <View style={styles.switchRow}>
               <View style={styles.switchInfo}>
-                <Text style={styles.switchLabel}>Auto-assign</Text>
-                <Text style={styles.switchDesc}>Let the system pick the best staff member</Text>
+                <Text style={styles.switchLabel}>{t('createTask.autoAssign')}</Text>
+                <Text style={styles.switchDesc}>{t('createTask.autoAssignDesc')}</Text>
               </View>
               <Switch
                 value={autoAssign}
@@ -241,7 +243,7 @@ export function CreateTaskModal({ visible, onClose, onCreated, preAssignStaffId 
           {mutation.isPending ? (
             <ActivityIndicator color={colors.white} size="small" />
           ) : (
-            <Text style={styles.submitBtnText}>Create Task</Text>
+            <Text style={styles.submitBtnText}>{t('createTask.createTask')}</Text>
           )}
         </TouchableOpacity>
       </View>

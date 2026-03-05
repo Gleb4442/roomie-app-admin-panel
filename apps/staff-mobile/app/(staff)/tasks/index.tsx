@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
+import { useTranslation } from 'react-i18next';
 import { getTasks, updateTaskStatus, assignTaskToMe } from '../../../src/api/staffApi';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { CreateTaskModal } from '../../../src/components/CreateTaskModal';
@@ -21,13 +22,6 @@ const CAN_CREATE_ROLES = ['SUPERVISOR', 'HEAD_OF_DEPT', 'GENERAL_MANAGER', 'RECE
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://172.20.10.5:3001';
 
-const FILTERS = [
-  { key: 'all', label: 'All' },
-  { key: 'mine', label: 'Mine' },
-  { key: 'new', label: 'New' },
-  { key: 'active', label: 'Active' },
-];
-
 const TASK_TYPE_ICON: Record<string, string> = {
   INTERNAL: 'build',
   ORDER: 'restaurant',
@@ -36,12 +30,20 @@ const TASK_TYPE_ICON: Record<string, string> = {
 
 export default function TasksScreen() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { staff, logout } = useAuthStore();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState('all');
   const [createVisible, setCreateVisible] = useState(false);
   const canCreate = staff ? CAN_CREATE_ROLES.includes(staff.role) : false;
   const sseRef = useRef<any>(null);
+
+  const FILTERS = [
+    { key: 'all', label: t('filter.all') },
+    { key: 'mine', label: t('filter.mine') },
+    { key: 'new', label: t('filter.new') },
+    { key: 'active', label: t('filter.active') },
+  ];
 
   // Build query params
   const queryParams: any = {};
@@ -100,24 +102,24 @@ export default function TasksScreen() {
       await updateTaskStatus(task.taskType, task.id, 'IN_PROGRESS');
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     } catch {
-      Alert.alert('Error', 'Failed to take task');
+      Alert.alert(t('tasks.error'), t('tasks.takeError'));
     }
   };
 
   const handleComplete = async (task: any) => {
     Alert.alert(
-      'Complete Task',
-      'Mark this task as completed?',
+      t('tasks.completeTask'),
+      t('tasks.completeConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('tasks.cancel'), style: 'cancel' },
         {
-          text: 'Complete',
+          text: t('tasks.complete'),
           onPress: async () => {
             try {
               await updateTaskStatus(task.taskType, task.id, 'COMPLETED');
               queryClient.invalidateQueries({ queryKey: ['tasks'] });
             } catch {
-              Alert.alert('Error', 'Failed to complete task');
+              Alert.alert(t('tasks.error'), t('tasks.completeError'));
             }
           },
         },
@@ -162,7 +164,7 @@ export default function TasksScreen() {
             {task.roomNumber && (
               <View style={styles.rowInfo}>
                 <MaterialIcons name="room" size={13} color={colors.textTertiary} />
-                <Text style={styles.infoText}>Room {task.roomNumber}</Text>
+                <Text style={styles.infoText}>{t('tasks.room', { number: task.roomNumber })}</Text>
               </View>
             )}
             {task.items?.length > 0 && (
@@ -176,14 +178,14 @@ export default function TasksScreen() {
 
             {/* Footer */}
             <View style={styles.cardFooter}>
-              <Text style={styles.timeText}>{formatTime(task.createdAt)}</Text>
+              <Text style={styles.timeText}>{formatTime(task.createdAt, t)}</Text>
 
               {isNew && !isMine && (
                 <TouchableOpacity
                   style={styles.takeBtn}
                   onPress={() => handleTakeTask(task)}
                 >
-                  <Text style={styles.takeBtnText}>Take</Text>
+                  <Text style={styles.takeBtnText}>{t('tasks.take')}</Text>
                 </TouchableOpacity>
               )}
               {isActive && isMine && (
@@ -192,7 +194,7 @@ export default function TasksScreen() {
                   onPress={() => handleComplete(task)}
                 >
                   <MaterialIcons name="check" size={14} color={colors.white} />
-                  <Text style={styles.doneBtnText}>Done</Text>
+                  <Text style={styles.doneBtnText}>{t('tasks.done')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -207,16 +209,18 @@ export default function TasksScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Hello, {staff?.firstName}</Text>
+          <Text style={styles.greeting}>{t('tasks.greeting', { name: staff?.firstName })}</Text>
           <Text style={styles.headerSub}>
-            {newCount > 0 ? `${newCount} new · ` : ''}{activeCount} in progress
+            {newCount > 0
+              ? t('tasks.newAndActive', { newCount, activeCount })
+              : t('tasks.onlyActive', { activeCount })}
           </Text>
         </View>
         <TouchableOpacity
           style={styles.logoutBtn}
-          onPress={() => Alert.alert('Sign Out', 'Are you sure?', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Sign Out', onPress: logout, style: 'destructive' },
+          onPress={() => Alert.alert(t('tasks.signOut'), t('tasks.signOutConfirm'), [
+            { text: t('tasks.cancel'), style: 'cancel' },
+            { text: t('tasks.signOut'), onPress: logout, style: 'destructive' },
           ])}
         >
           <MaterialIcons name="logout" size={20} color={colors.textSecondary} />
@@ -253,7 +257,7 @@ export default function TasksScreen() {
           <View style={styles.empty}>
             <MaterialIcons name="check-circle-outline" size={48} color={colors.textTertiary} />
             <Text style={styles.emptyText}>
-              {isLoading ? 'Loading...' : 'No tasks'}
+              {isLoading ? t('tasks.loading') : t('tasks.noTasks')}
             </Text>
           </View>
         }
@@ -282,14 +286,14 @@ export default function TasksScreen() {
   );
 }
 
-function formatTime(iso: string) {
+function formatTime(iso: string, t: (key: string, opts?: any) => string) {
   const d = new Date(iso);
   const now = new Date();
   const diff = Math.floor((now.getTime() - d.getTime()) / 60000);
-  if (diff < 1) return 'Just now';
-  if (diff < 60) return `${diff}m ago`;
-  if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (diff < 1) return t('tasks.justNow');
+  if (diff < 60) return t('tasks.minutesAgo', { n: diff });
+  if (diff < 1440) return t('tasks.hoursAgo', { n: Math.floor(diff / 60) });
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 const styles = StyleSheet.create({

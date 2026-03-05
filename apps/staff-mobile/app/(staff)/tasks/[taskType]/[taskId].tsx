@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import {
   getTasks, updateTaskStatus, updateChecklist,
   addComment, getComments, assignTaskToMe, updateRoomStatus,
@@ -24,15 +25,16 @@ const STATUS_FLOW: Record<string, string> = {
   COMPLETED: 'CLOSED',
 };
 
-const STATUS_BTN_LABEL: Record<string, string> = {
-  NEW: 'Take & Start',
-  ASSIGNED: 'Start',
-  IN_PROGRESS: 'Mark Complete',
-  COMPLETED: 'Close',
+const STATUS_BTN_TKEY: Record<string, string> = {
+  NEW: 'taskDetail.takeStart',
+  ASSIGNED: 'taskDetail.start',
+  IN_PROGRESS: 'taskDetail.markComplete',
+  COMPLETED: 'taskDetail.close',
 };
 
 export default function TaskDetailScreen() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { taskType, taskId } = useLocalSearchParams<{ taskType: string; taskId: string }>();
   const { staff } = useAuthStore();
   const queryClient = useQueryClient();
@@ -64,7 +66,7 @@ export default function TaskDetailScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
-    onError: () => Alert.alert('Error', 'Failed to update status'),
+    onError: () => Alert.alert(t('taskDetail.error'), t('taskDetail.updateError')),
   });
 
   const checklistMutation = useMutation({
@@ -85,9 +87,9 @@ export default function TaskDetailScreen() {
     mutationFn: (status: string) => updateRoomStatus(task?.roomId, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      Alert.alert('Done', 'Room status updated');
+      Alert.alert(t('taskDetail.roomUpdated'), t('taskDetail.roomUpdatedMsg'));
     },
-    onError: () => Alert.alert('Error', 'Failed to update room status'),
+    onError: () => Alert.alert(t('taskDetail.error'), t('taskDetail.updateError')),
   });
 
   const handleStatusChange = () => {
@@ -98,7 +100,7 @@ export default function TaskDetailScreen() {
 
   const handleHold = () => {
     if (!holdReason.trim()) {
-      Alert.alert('Required', 'Please enter a reason for hold');
+      Alert.alert(t('taskDetail.holdRequired'), t('taskDetail.holdRequiredMsg'));
       return;
     }
     statusMutation.mutate({ status: 'ON_HOLD', reason: holdReason });
@@ -150,29 +152,29 @@ export default function TaskDetailScreen() {
         {/* Info Card */}
         <View style={styles.infoCard}>
           {task.roomNumber && (
-            <InfoRow icon="room" label="Location" value={`Room ${task.roomNumber}`} />
+            <InfoRow icon="room" label={t('taskDetail.location')} value={t('taskDetail.room', { number: task.roomNumber })} />
           )}
           {task.locationLabel && !task.roomNumber && (
-            <InfoRow icon="place" label="Location" value={task.locationLabel} />
+            <InfoRow icon="place" label={t('taskDetail.location')} value={task.locationLabel} />
           )}
           {task.department && (
-            <InfoRow icon="groups" label="Department" value={task.department.replace('_', ' ')} />
+            <InfoRow icon="groups" label={t('taskDetail.department')} value={t(`departments.${task.department}`, { defaultValue: task.department.replace('_', ' ') })} />
           )}
           {task.assignedTo && (
-            <InfoRow icon="person" label="Assigned to" value={`${task.assignedTo.firstName || ''} ${task.assignedTo.lastName || ''}`.trim()} />
+            <InfoRow icon="person" label={t('taskDetail.assignedTo')} value={`${task.assignedTo.firstName || ''} ${task.assignedTo.lastName || ''}`.trim()} />
           )}
           {task.dueAt && (
-            <InfoRow icon="schedule" label="Due" value={new Date(task.dueAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} />
+            <InfoRow icon="schedule" label={t('taskDetail.due')} value={new Date(task.dueAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })} />
           )}
           {task.guest && (
-            <InfoRow icon="person-outline" label="Guest" value={task.guest.firstName} />
+            <InfoRow icon="person-outline" label={t('taskDetail.guest')} value={task.guest.firstName} />
           )}
         </View>
 
         {/* Items (orders/service) */}
         {task.items?.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>ITEMS</Text>
+            <Text style={styles.sectionTitle}>{t('taskDetail.items')}</Text>
             {task.items.map((item: string, i: number) => (
               <Text key={i} style={styles.itemLine}>• {item}</Text>
             ))}
@@ -182,7 +184,7 @@ export default function TaskDetailScreen() {
         {/* Description */}
         {task.description && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>NOTE</Text>
+            <Text style={styles.sectionTitle}>{t('taskDetail.note')}</Text>
             <Text style={styles.descText}>{task.description}</Text>
           </View>
         )}
@@ -190,14 +192,14 @@ export default function TaskDetailScreen() {
         {/* Room Status (for housekeeping tasks with roomId) */}
         {task.roomId && task.department === 'HOUSEKEEPING' && task.status === 'IN_PROGRESS' && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>ROOM STATUS</Text>
+            <Text style={styles.sectionTitle}>{t('taskDetail.roomStatus')}</Text>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
               <TouchableOpacity
                 style={[styles.roomBtn, { backgroundColor: 'rgba(59,130,246,0.15)', borderColor: 'rgba(59,130,246,0.3)' }]}
                 onPress={() => roomStatusMutation.mutate('CLEANED')}
                 disabled={roomStatusMutation.isPending}
               >
-                <Text style={{ color: '#3B82F6', fontWeight: '700', fontSize: 13 }}>✓ Mark Cleaned</Text>
+                <Text style={{ color: '#3B82F6', fontWeight: '700', fontSize: 13 }}>{t('taskDetail.markCleaned')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -206,7 +208,7 @@ export default function TaskDetailScreen() {
         {/* Checklist */}
         {checklist && completedItems && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>CHECKLIST</Text>
+            <Text style={styles.sectionTitle}>{t('taskDetail.checklist')}</Text>
             {Object.entries(completedItems).map(([itemId, checked]) => (
               <TouchableOpacity
                 key={itemId}
@@ -223,7 +225,7 @@ export default function TaskDetailScreen() {
               </TouchableOpacity>
             ))}
             {!allChecked && (
-              <Text style={styles.checklistWarning}>Complete all items before finishing</Text>
+              <Text style={styles.checklistWarning}>{t('taskDetail.checklistWarning')}</Text>
             )}
           </View>
         )}
@@ -231,21 +233,21 @@ export default function TaskDetailScreen() {
         {/* Hold reason input */}
         {showHoldInput && (
           <View style={styles.holdBox}>
-            <Text style={styles.holdLabel}>Reason for hold</Text>
+            <Text style={styles.holdLabel}>{t('taskDetail.reasonForHold')}</Text>
             <TextInput
               style={styles.holdInput}
               value={holdReason}
               onChangeText={setHoldReason}
-              placeholder="e.g. Waiting for supplies..."
+              placeholder={t('taskDetail.holdPlaceholder')}
               placeholderTextColor={colors.textTertiary}
               multiline
             />
             <View style={styles.holdActions}>
               <TouchableOpacity onPress={() => setShowHoldInput(false)} style={styles.holdCancel}>
-                <Text style={styles.holdCancelText}>Cancel</Text>
+                <Text style={styles.holdCancelText}>{t('taskDetail.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleHold} style={styles.holdConfirm}>
-                <Text style={styles.holdConfirmText}>Put on Hold</Text>
+                <Text style={styles.holdConfirmText}>{t('taskDetail.putOnHold')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -260,7 +262,7 @@ export default function TaskDetailScreen() {
                 onPress={() => setShowHoldInput(v => !v)}
               >
                 <MaterialIcons name="pause" size={16} color={colors.warning} />
-                <Text style={styles.holdBtnText}>Hold</Text>
+                <Text style={styles.holdBtnText}>{t('taskDetail.hold')}</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
@@ -276,7 +278,7 @@ export default function TaskDetailScreen() {
               ) : (
                 <>
                   <MaterialIcons name="arrow-forward" size={16} color={colors.white} />
-                  <Text style={styles.mainActionText}>{STATUS_BTN_LABEL[task.status]}</Text>
+                  <Text style={styles.mainActionText}>{t(STATUS_BTN_TKEY[task.status])}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -285,7 +287,7 @@ export default function TaskDetailScreen() {
 
         {/* Comments */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>COMMENTS ({comments.length})</Text>
+          <Text style={styles.sectionTitle}>{t('taskDetail.comments', { count: comments.length })}</Text>
           {comments.map((c: any) => (
             <View key={c.id} style={styles.comment}>
               <Text style={styles.commentAuthor}>{c.author.firstName}</Text>
@@ -298,7 +300,7 @@ export default function TaskDetailScreen() {
               style={styles.commentField}
               value={commentText}
               onChangeText={setCommentText}
-              placeholder="Add a comment..."
+              placeholder={t('taskDetail.commentPlaceholder')}
               placeholderTextColor={colors.textTertiary}
               multiline
             />

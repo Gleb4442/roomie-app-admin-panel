@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { getOnlineStaff } from '../api/staffApi';
 import { colors, spacing, radius } from '../theme';
 
@@ -24,6 +25,7 @@ const DEPT_ICON: Record<string, string> = {
 };
 
 export function AssignModal({ visible, taskTitle, onAssign, onClose }: Props) {
+  const { t } = useTranslation();
   const { data: staff = [], isLoading } = useQuery({
     queryKey: ['online-staff'],
     queryFn: async () => { const { data } = await getOnlineStaff(); return data; },
@@ -38,7 +40,7 @@ export function AssignModal({ visible, taskTitle, onAssign, onClose }: Props) {
         <View style={styles.handle} />
 
         <View style={styles.header}>
-          <Text style={styles.title}>Assign Task</Text>
+          <Text style={styles.title}>{t('assignModal.title')}</Text>
           <TouchableOpacity onPress={onClose}>
             <MaterialIcons name="close" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
@@ -51,7 +53,7 @@ export function AssignModal({ visible, taskTitle, onAssign, onClose }: Props) {
         ) : staff.length === 0 ? (
           <View style={styles.empty}>
             <MaterialIcons name="person-off" size={40} color={colors.textTertiary} />
-            <Text style={styles.emptyText}>No staff on shift</Text>
+            <Text style={styles.emptyText}>{t('assignModal.noStaff')}</Text>
           </View>
         ) : (
           <FlatList

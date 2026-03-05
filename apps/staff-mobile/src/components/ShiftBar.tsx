@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { getShiftStatus, startShift, endShift } from '../api/staffApi';
 import { colors, spacing, radius } from '../theme';
 
@@ -29,6 +30,7 @@ function useElapsed(startedAt: string | null) {
 }
 
 export function ShiftBar() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -44,7 +46,7 @@ export function ShiftBar() {
   const startMutation = useMutation({
     mutationFn: () => startShift(),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['shift-status'] }),
-    onError: () => Alert.alert('Error', 'Failed to start shift'),
+    onError: () => Alert.alert(t('shiftBar.error'), t('shiftBar.startError')),
   });
 
   const endMutation = useMutation({
@@ -53,7 +55,7 @@ export function ShiftBar() {
       qc.invalidateQueries({ queryKey: ['shift-status'] });
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
-    onError: () => Alert.alert('Error', 'Failed to end shift'),
+    onError: () => Alert.alert(t('shiftBar.error'), t('shiftBar.endError')),
   });
 
   const elapsed = useElapsed(data?.startedAt ?? null);
@@ -62,11 +64,11 @@ export function ShiftBar() {
 
   const handleEnd = () => {
     Alert.alert(
-      'End Shift',
-      `You've been on shift for ${elapsed}. End now?`,
+      t('shiftBar.endShift'),
+      t('shiftBar.endConfirm', { elapsed }),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'End Shift', style: 'destructive', onPress: () => endMutation.mutate() },
+        { text: t('shiftBar.cancel'), style: 'cancel' },
+        { text: t('shiftBar.endShift'), style: 'destructive', onPress: () => endMutation.mutate() },
       ],
     );
   };
@@ -83,14 +85,14 @@ export function ShiftBar() {
     return (
       <View style={[styles.bar, styles.barActive]}>
         <View style={styles.dot} />
-        <Text style={styles.activeText}>On shift · {elapsed}</Text>
+        <Text style={styles.activeText}>{t('shiftBar.onShift', { elapsed })}</Text>
         <TouchableOpacity style={styles.action} onPress={handleEnd} disabled={isPending}>
           {isPending ? (
             <ActivityIndicator size="small" color={colors.error} />
           ) : (
             <>
               <MaterialIcons name="logout" size={14} color={colors.error} />
-              <Text style={styles.endText}>End</Text>
+              <Text style={styles.endText}>{t('shiftBar.end')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -101,7 +103,7 @@ export function ShiftBar() {
   return (
     <View style={[styles.bar, styles.barInactive]}>
       <MaterialIcons name="schedule" size={15} color={colors.warning} />
-      <Text style={styles.inactiveText}>You're not on shift</Text>
+      <Text style={styles.inactiveText}>{t('shiftBar.notOnShift')}</Text>
       <TouchableOpacity
         style={[styles.action, styles.startBtn]}
         onPress={() => startMutation.mutate()}
@@ -110,7 +112,7 @@ export function ShiftBar() {
         {isPending ? (
           <ActivityIndicator size="small" color={colors.white} />
         ) : (
-          <Text style={styles.startBtnText}>Start Shift</Text>
+          <Text style={styles.startBtnText}>{t('shiftBar.startShift')}</Text>
         )}
       </TouchableOpacity>
     </View>

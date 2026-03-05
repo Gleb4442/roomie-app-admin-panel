@@ -1,11 +1,13 @@
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../src/stores/authStore';
 import { colors } from '../../src/theme';
 
 const SUPERVISOR_ROLES = ['SUPERVISOR', 'HEAD_OF_DEPT', 'GENERAL_MANAGER'];
 
 export default function StaffLayout() {
+  const { t } = useTranslation();
   const { staff } = useAuthStore();
   const isSupervisor = staff ? SUPERVISOR_ROLES.includes(staff.role) : false;
 
@@ -26,7 +28,7 @@ export default function StaffLayout() {
       <Tabs.Screen
         name="tasks"
         options={{
-          title: 'Tasks',
+          title: t('tabs.tasks'),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="assignment" color={color} size={size} />
           ),
@@ -35,7 +37,7 @@ export default function StaffLayout() {
       <Tabs.Screen
         name="kanban"
         options={{
-          title: 'Board',
+          title: t('tabs.board'),
           href: isSupervisor ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="view-column" color={color} size={size} />
@@ -45,7 +47,7 @@ export default function StaffLayout() {
       <Tabs.Screen
         name="team"
         options={{
-          title: 'Team',
+          title: t('tabs.team'),
           href: isSupervisor ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="people" color={color} size={size} />
@@ -55,9 +57,18 @@ export default function StaffLayout() {
       <Tabs.Screen
         name="housekeeping"
         options={{
-          title: 'Rooms',
+          title: t('tabs.rooms'),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="hotel" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: t('tabs.settings'),
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="settings" color={color} size={size} />
           ),
         }}
       />

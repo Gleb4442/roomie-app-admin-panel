@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { loginByPin } from '../../src/api/staffApi';
 import { useAuthStore } from '../../src/stores/authStore';
 import { colors, spacing, radius } from '../../src/theme';
@@ -21,6 +22,7 @@ const NUMPAD = [
 
 export default function PinLoginScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { setStaff } = useAuthStore();
 
   const [hotelId, setHotelId] = useState('');
@@ -46,7 +48,7 @@ export default function PinLoginScreen() {
 
   const submit = async (finalPin: string) => {
     if (!hotelId.trim()) {
-      Alert.alert('Error', 'Enter Hotel ID first');
+      Alert.alert(t('pinLogin.error'), t('pinLogin.errorHotelId'));
       setPin('');
       return;
     }
@@ -59,7 +61,7 @@ export default function PinLoginScreen() {
       setShake(true);
       setTimeout(() => setShake(false), 600);
       setPin('');
-      Alert.alert('Wrong PIN', 'Please try again');
+      Alert.alert(t('pinLogin.wrongPin'), t('pinLogin.tryAgain'));
     } finally {
       setLoading(false);
     }
@@ -77,8 +79,8 @@ export default function PinLoginScreen() {
         <View style={styles.logoIcon}>
           <MaterialIcons name="pin" size={28} color={colors.white} />
         </View>
-        <Text style={styles.title}>Quick PIN Login</Text>
-        <Text style={styles.subtitle}>For shared devices on shift</Text>
+        <Text style={styles.title}>{t('pinLogin.title')}</Text>
+        <Text style={styles.subtitle}>{t('pinLogin.subtitle')}</Text>
       </View>
 
       {/* Hotel ID */}
@@ -86,7 +88,7 @@ export default function PinLoginScreen() {
         <MaterialIcons name="hotel" size={16} color={colors.textTertiary} />
         <TextInput
           style={styles.hotelInput}
-          placeholder="Hotel ID (e.g. grand-plaza)"
+          placeholder={t('pinLogin.hotelIdPlaceholder')}
           placeholderTextColor={colors.textTertiary}
           value={hotelId}
           onChangeText={setHotelId}
@@ -110,10 +112,10 @@ export default function PinLoginScreen() {
       </View>
 
       {pin.length < PIN_LENGTH && (
-        <Text style={styles.pinHint}>Enter your {PIN_LENGTH}-digit PIN</Text>
+        <Text style={styles.pinHint}>{t('pinLogin.enterPin', { length: PIN_LENGTH })}</Text>
       )}
       {loading && (
-        <Text style={styles.pinHint}>Signing in...</Text>
+        <Text style={styles.pinHint}>{t('pinLogin.signingIn')}</Text>
       )}
 
       {/* Numpad */}

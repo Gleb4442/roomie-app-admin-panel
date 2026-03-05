@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { loginStaff } from '../../src/api/staffApi';
 import { useAuthStore } from '../../src/stores/authStore';
 import { colors, spacing, radius } from '../../src/theme';
@@ -13,6 +14,7 @@ import { colors, spacing, radius } from '../../src/theme';
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useTranslation();
   const { setStaff } = useAuthStore();
 
   const [hotelId, setHotelId] = useState('');
@@ -23,7 +25,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!hotelId.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(t('login.error'), t('login.fillFields'));
       return;
     }
     setLoading(true);
@@ -32,8 +34,8 @@ export default function LoginScreen() {
       await setStaff(data.staff, data.accessToken, data.refreshToken);
     } catch (err: any) {
       Alert.alert(
-        'Login Failed',
-        err.response?.data?.error || 'Invalid credentials',
+        t('login.loginFailed'),
+        err.response?.data?.error || t('login.invalidCredentials'),
       );
     } finally {
       setLoading(false);
@@ -51,21 +53,21 @@ export default function LoginScreen() {
           <View style={styles.logoIcon}>
             <MaterialIcons name="business-center" size={32} color={colors.white} />
           </View>
-          <Text style={styles.logoTitle}>HotelMol Staff</Text>
-          <Text style={styles.logoSub}>Hotel Operations Platform</Text>
+          <Text style={styles.logoTitle}>{t('login.title')}</Text>
+          <Text style={styles.logoSub}>{t('login.subtitle')}</Text>
         </View>
 
         {/* Form */}
         <View style={styles.form}>
-          <Text style={styles.formTitle}>Sign In</Text>
+          <Text style={styles.formTitle}>{t('login.formTitle')}</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Hotel ID</Text>
+            <Text style={styles.label}>{t('login.hotelId')}</Text>
             <View style={styles.inputWrap}>
               <MaterialIcons name="hotel" size={18} color={colors.textTertiary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="e.g. grand-plaza"
+                placeholder={t('login.hotelIdPlaceholder')}
                 placeholderTextColor={colors.textTertiary}
                 value={hotelId}
                 onChangeText={setHotelId}
@@ -76,12 +78,12 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t('login.email')}</Text>
             <View style={styles.inputWrap}>
               <MaterialIcons name="email" size={18} color={colors.textTertiary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="your@email.com"
+                placeholder={t('login.emailPlaceholder')}
                 placeholderTextColor={colors.textTertiary}
                 value={email}
                 onChangeText={setEmail}
@@ -92,7 +94,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>{t('login.password')}</Text>
             <View style={styles.inputWrap}>
               <MaterialIcons name="lock-outline" size={18} color={colors.textTertiary} style={styles.inputIcon} />
               <TextInput
@@ -122,7 +124,7 @@ export default function LoginScreen() {
             {loading ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.loginBtnText}>Sign In</Text>
+              <Text style={styles.loginBtnText}>{t('login.signIn')}</Text>
             )}
           </TouchableOpacity>
 
@@ -131,7 +133,7 @@ export default function LoginScreen() {
             onPress={() => router.push('/(auth)/pin-login')}
           >
             <MaterialIcons name="pin" size={16} color={colors.primary} />
-            <Text style={styles.pinLinkText}>Login with PIN (shared device)</Text>
+            <Text style={styles.pinLinkText}>{t('login.pinLogin')}</Text>
           </TouchableOpacity>
         </View>
       </View>

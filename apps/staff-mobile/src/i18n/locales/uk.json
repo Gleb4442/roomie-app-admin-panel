@@ -1,0 +1,202 @@
+{
+  "login": {
+    "title": "HotelMol Staff",
+    "subtitle": "Платформа управління готелем",
+    "formTitle": "Увійти",
+    "hotelId": "ID готелю",
+    "hotelIdPlaceholder": "напр. grand-plaza",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "password": "Пароль",
+    "signIn": "Увійти",
+    "pinLogin": "Вхід за PIN (спільний пристрій)",
+    "error": "Помилка",
+    "fillFields": "Заповніть всі поля",
+    "loginFailed": "Помилка входу",
+    "invalidCredentials": "Невірні дані"
+  },
+  "pinLogin": {
+    "title": "Швидкий вхід за PIN",
+    "subtitle": "Для спільних пристроїв на зміні",
+    "hotelIdPlaceholder": "ID готелю (напр. grand-plaza)",
+    "enterPin": "Введіть {{length}}-значний PIN",
+    "signingIn": "Вхід...",
+    "wrongPin": "Невірний PIN",
+    "tryAgain": "Спробуйте ще раз",
+    "errorHotelId": "Спочатку введіть ID готелю",
+    "error": "Помилка"
+  },
+  "tabs": {
+    "tasks": "Завдання",
+    "board": "Дошка",
+    "team": "Команда",
+    "rooms": "Кімнати",
+    "settings": "Налаштування"
+  },
+  "tasks": {
+    "greeting": "Привіт, {{name}}",
+    "newAndActive": "{{newCount}} нових · {{activeCount}} в роботі",
+    "onlyActive": "{{activeCount}} в роботі",
+    "loading": "Завантаження...",
+    "noTasks": "Немає завдань",
+    "signOut": "Вийти",
+    "signOutConfirm": "Ви впевнені?",
+    "cancel": "Скасувати",
+    "completeTask": "Завершити завдання",
+    "completeConfirm": "Позначити завдання виконаним?",
+    "complete": "Виконати",
+    "error": "Помилка",
+    "takeError": "Не вдалося взяти завдання",
+    "completeError": "Не вдалося завершити завдання",
+    "take": "Взяти",
+    "done": "Готово",
+    "room": "Кімната {{number}}",
+    "justNow": "Щойно",
+    "minutesAgo": "{{n}} хв",
+    "hoursAgo": "{{n}} год"
+  },
+  "filter": {
+    "all": "Всі",
+    "mine": "Мої",
+    "new": "Нові",
+    "active": "Активні"
+  },
+  "taskDetail": {
+    "location": "Місце",
+    "room": "Кімната {{number}}",
+    "department": "Відділ",
+    "assignedTo": "Призначено",
+    "due": "Термін",
+    "guest": "Гість",
+    "items": "ПОЗИЦІЇ",
+    "note": "НОТАТКА",
+    "roomStatus": "СТАТУС КІМНАТИ",
+    "markCleaned": "✓ Прибрано",
+    "checklist": "ЧЕКЛІСТ",
+    "checklistWarning": "Виконайте всі пункти перед завершенням",
+    "comments": "КОМЕНТАРІ ({{count}})",
+    "commentPlaceholder": "Додати коментар...",
+    "reasonForHold": "Причина паузи",
+    "holdPlaceholder": "напр. Очікуємо матеріали...",
+    "cancel": "Скасувати",
+    "putOnHold": "Поставити на паузу",
+    "hold": "Пауза",
+    "takeStart": "Взяти і почати",
+    "start": "Почати",
+    "markComplete": "Виконано",
+    "close": "Закрити",
+    "error": "Помилка",
+    "updateError": "Не вдалося оновити статус",
+    "roomUpdated": "Готово",
+    "roomUpdatedMsg": "Статус кімнати оновлено",
+    "holdRequired": "Обов'язково",
+    "holdRequiredMsg": "Вкажіть причину паузи"
+  },
+  "kanban": {
+    "title": "Дошка",
+    "assign": "Призначити",
+    "empty": "Порожньо",
+    "new": "Нові",
+    "assigned": "Призначено",
+    "active": "В роботі",
+    "hold": "На паузі",
+    "done": "Виконано"
+  },
+  "team": {
+    "title": "Команда на зміні",
+    "staffActive": "{{count}} співробітників активно",
+    "noStaff": "Немає співробітників на зміні",
+    "noStaffDesc": "Співробітники з'являться тут після початку зміни",
+    "floor": "Поверх {{number}}",
+    "free": "Вільний",
+    "tasks": "{{count}} завдань"
+  },
+  "housekeeping": {
+    "title": "Покоївки",
+    "allFloors": "Всі",
+    "allStatus": "Всі статуси",
+    "noRooms": "Кімнати не знайдено",
+    "rush": "ТЕРМІНОВО",
+    "floor": "П{{number}}",
+    "status": {
+      "DIRTY": "Брудна",
+      "CLEANING": "Прибирання",
+      "CLEANED": "Прибрана",
+      "INSPECTED": "Перевірена",
+      "READY": "Готова",
+      "OUT_OF_ORDER": "НВЛ",
+      "DO_NOT_DISTURB": "НТ"
+    },
+    "actions": {
+      "DIRTY": "Почати прибирання",
+      "CLEANING": "Прибрано",
+      "CLEANED": "Перевірити",
+      "INSPECTED": "Готова"
+    }
+  },
+  "shiftBar": {
+    "onShift": "На зміні · {{elapsed}}",
+    "end": "Завершити",
+    "startShift": "Почати зміну",
+    "notOnShift": "Ви не на зміні",
+    "endShift": "Завершити зміну",
+    "endConfirm": "Ви на зміні {{elapsed}}. Завершити?",
+    "cancel": "Скасувати",
+    "error": "Помилка",
+    "startError": "Не вдалося почати зміну",
+    "endError": "Не вдалося завершити зміну"
+  },
+  "createTask": {
+    "title": "Нове завдання",
+    "useTemplate": "Використати шаблон (за бажанням)",
+    "titleLabel": "Назва *",
+    "titlePlaceholder": "напр. Прибрати кімнату 302",
+    "descriptionLabel": "Опис",
+    "descriptionPlaceholder": "Додаткові деталі...",
+    "roomLabel": "Номер кімнати",
+    "roomPlaceholder": "напр. 302",
+    "deptLabel": "Відділ",
+    "priorityLabel": "Пріоритет",
+    "autoAssign": "Авто-призначення",
+    "autoAssignDesc": "Система обере найкращого співробітника",
+    "assignedTo": "Буде призначено обраному співробітнику",
+    "createTask": "Створити завдання",
+    "error": "Помилка",
+    "createError": "Не вдалося створити завдання. Спробуйте ще раз."
+  },
+  "assignModal": {
+    "title": "Призначити завдання",
+    "noStaff": "Немає співробітників на зміні"
+  },
+  "templatePicker": {
+    "title": "Обрати шаблон",
+    "noTemplates": "Немає шаблонів",
+    "noTemplatesHint": "Попросіть GM додати шаблони завдань",
+    "steps": "{{count}} кроків",
+    "sla": "{{minutes}} хв SLA"
+  },
+  "departments": {
+    "HOUSEKEEPING": "Покоївки",
+    "MAINTENANCE": "Техслужба",
+    "FOOD_AND_BEVERAGE": "Харчування",
+    "FRONT_OFFICE": "Ресепшн",
+    "SECURITY": "Охорона",
+    "MANAGEMENT": "Управління"
+  },
+  "roles": {
+    "LINE_STAFF": "Персонал",
+    "SUPERVISOR": "Супервайзер",
+    "HEAD_OF_DEPT": "Керівник",
+    "GENERAL_MANAGER": "GM",
+    "RECEPTIONIST": "Ресепціоніст"
+  },
+  "settings": {
+    "title": "Налаштування",
+    "language": "Мова",
+    "version": "HotelMol Staff v1.0.0",
+    "account": "Акаунт",
+    "signOut": "Вийти",
+    "signOutConfirm": "Ви впевнені?",
+    "cancel": "Скасувати"
+  }
+}
