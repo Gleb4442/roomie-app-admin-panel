@@ -220,4 +220,50 @@ export const adminApi = {
     const res = await api.post(`/api/admin/managers/${managerId}/hotels`, { hotelIds }, { headers: authHeader(token) });
     return res.data.data;
   },
+
+  // Staff
+  listStaff: async (token: string, hotelId: string): Promise<AdminStaffMember[]> => {
+    const res = await api.get(`/api/admin/hotels/${hotelId}/staff`, { headers: authHeader(token) });
+    return res.data.data;
+  },
+  createStaff: async (token: string, hotelId: string, data: CreateAdminStaffData) => {
+    const res = await api.post(`/api/admin/hotels/${hotelId}/staff`, data, { headers: authHeader(token) });
+    return res.data.data as AdminStaffMember;
+  },
+  updateStaff: async (token: string, hotelId: string, staffId: string, data: Partial<CreateAdminStaffData>) => {
+    const res = await api.patch(`/api/admin/hotels/${hotelId}/staff/${staffId}`, data, { headers: authHeader(token) });
+    return res.data.data as AdminStaffMember;
+  },
+  deactivateStaff: async (token: string, hotelId: string, staffId: string) => {
+    await api.delete(`/api/admin/hotels/${hotelId}/staff/${staffId}`, { headers: authHeader(token) });
+  },
+  resetStaffPin: async (token: string, hotelId: string, staffId: string, pin: string) => {
+    await api.post(`/api/admin/hotels/${hotelId}/staff/${staffId}/reset-pin`, { pin }, { headers: authHeader(token) });
+  },
 };
+
+export interface AdminStaffMember {
+  id: string;
+  hotelId: string;
+  email: string;
+  firstName: string;
+  lastName: string | null;
+  phone: string | null;
+  role: string;
+  department: string;
+  isActive: boolean;
+  assignedFloor: string | null;
+  shifts?: { isActive: boolean }[];
+  createdAt: string;
+}
+
+export interface CreateAdminStaffData {
+  email: string;
+  firstName: string;
+  lastName?: string;
+  phone?: string;
+  role: string;
+  department: string;
+  password: string;
+  assignedFloor?: string;
+}

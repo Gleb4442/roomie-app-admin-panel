@@ -1,6 +1,6 @@
 'use client';
-import { use } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { use, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDashboardAuth } from '@/contexts/DashboardAuthContext';
 import { dashboardApi } from '@/lib/api/dashboard';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -18,11 +18,26 @@ export default function QRPage({ params }: { params: Promise<{ hotelId: string }
   const { hotelId } = use(params);
   const { token } = useDashboardAuth();
   const { t } = useI18n();
+  const queryClient = useQueryClient();
+
+  const [showForm, setShowForm] = useState(false);
+  const [roomNumber, setRoomNumber] = useState('');
+  const [label, setLabel] = useState('');
 
   const { data: qrCodes, isLoading } = useQuery({
     queryKey: ['qr-codes', hotelId],
     queryFn: () => dashboardApi.getQRCodes(hotelId, token!),
     enabled: !!token,
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: () => dashboardApi.generateQR(hotelId, roomNumber, label || undefined, token!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['qr-codes', hotelId] });
+      setRoomNumber('');
+      setLabel('');
+      setShowForm(false);
+    },
   });
 
   const downloadAll = () => {
@@ -43,20 +58,80 @@ export default function QRPage({ params }: { params: Promise<{ hotelId: string }
         title={t('qr.title')}
         subtitle={t('qr.subtitle', { active: activeCount, scans: totalScans })}
         actions={
-          qrCodes?.length ? (
+          <div className="flex items-center gap-2">
             <button
-              onClick={downloadAll}
+              onClick={() => setShowForm(v => !v)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-600 font-display transition-all"
-              style={{ background: 'rgba(240,165,0,0.12)', color: '#F0A500', border: '1px solid rgba(240,165,0,0.2)' }}
+              style={{ background: 'rgba(240,165,0,0.15)', color: '#F0A500', border: '1px solid rgba(240,165,0,0.3)' }}
             >
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12h14"/>
               </svg>
-              {t('qr.downloadAll')}
+              {t('qr.generate')}
             </button>
-          ) : undefined
+            {qrCodes?.length ? (
+              <button
+                onClick={downloadAll}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-600 font-display transition-all"
+                style={{ background: 'rgba(240,165,0,0.08)', color: '#F0A500', border: '1px solid rgba(240,165,0,0.15)' }}
+              >
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                {t('qr.downloadAll')}
+              </button>
+            ) : null}
+          </div>
         }
       />
+
+      {/* Generate QR form */}
+      {showForm && (
+        <div className="card p-5 mb-6" style={{ border: '1px solid rgba(240,165,0,0.2)' }}>
+          <p className="text-sm font-600 text-white mb-4">{t('qr.generateTitle')}</p>
+          <div className="flex items-end gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs text-ink-400">{t('qr.roomNumber')} *</label>
+              <input
+                type="text"
+                value={roomNumber}
+                onChange={e => setRoomNumber(e.target.value)}
+                placeholder="305"
+                className="px-3 py-2 rounded-lg text-sm text-white bg-transparent border outline-none"
+                style={{ borderColor: 'rgba(255,255,255,0.12)', width: 120 }}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5 flex-1">
+              <label className="text-xs text-ink-400">{t('qr.labelOptional')}</label>
+              <input
+                type="text"
+                value={label}
+                onChange={e => setLabel(e.target.value)}
+                placeholder={t('qr.labelPlaceholder')}
+                className="px-3 py-2 rounded-lg text-sm text-white bg-transparent border outline-none"
+                style={{ borderColor: 'rgba(255,255,255,0.12)' }}
+              />
+            </div>
+            <button
+              onClick={() => generateMutation.mutate()}
+              disabled={!roomNumber || generateMutation.isPending}
+              className="px-5 py-2 rounded-lg text-xs font-600 font-display transition-all disabled:opacity-50"
+              style={{ background: '#F0A500', color: '#0D1117' }}
+            >
+              {generateMutation.isPending ? t('qr.generating') : t('qr.generateBtn')}
+            </button>
+            <button
+              onClick={() => setShowForm(false)}
+              className="px-4 py-2 rounded-lg text-xs text-ink-400 transition-all hover:text-white"
+            >
+              {t('common.cancel')}
+            </button>
+          </div>
+          {generateMutation.isError && (
+            <p className="text-xs text-rose mt-3">{t('qr.generateError')}</p>
+          )}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -65,8 +140,15 @@ export default function QRPage({ params }: { params: Promise<{ hotelId: string }
           ))}
         </div>
       ) : !qrCodes?.length ? (
-        <div className="card flex items-center justify-center h-40 text-ink-500 text-sm">
-          {t('qr.noQRCodes')}
+        <div className="card flex flex-col items-center justify-center h-40 gap-3 text-ink-500">
+          <span className="text-sm">{t('qr.noQRCodes')}</span>
+          <button
+            onClick={() => setShowForm(true)}
+            className="text-xs px-4 py-2 rounded-lg transition-all"
+            style={{ background: 'rgba(240,165,0,0.12)', color: '#F0A500' }}
+          >
+            {t('qr.generateFirst')}
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

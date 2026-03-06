@@ -129,8 +129,17 @@ export const uk = {
   qr: {
     title: 'QR-коди',
     subtitle: '{active} активних кодів · {scans} сканувань',
+    generate: 'Створити QR',
+    generateTitle: 'Створити QR-код для номеру',
+    generateBtn: 'Створити',
+    generating: 'Створення…',
+    generateError: 'Не вдалося створити QR-код. Спробуйте ще раз.',
+    generateFirst: 'Створити перший QR-код',
+    roomNumber: 'Номер кімнати',
+    labelOptional: 'Назва (необов\'язково)',
+    labelPlaceholder: 'наприклад, Делюкс номер 305',
     downloadAll: 'Завантажити всі (ZIP)',
-    noQRCodes: 'QR-коди не створені. Використайте панель адміністратора.',
+    noQRCodes: 'QR-коди ще не створені.',
     inactive: 'Неактивний',
     scans: 'сканувань',
     downloadPdf: '↓ PDF',
@@ -362,5 +371,6 @@ export const uk = {
   common: {
     rm: 'Ном.',
     loading: 'Завантаження...',
+    cancel: 'Скасувати',
   },
 } as const;

@@ -1,8 +1,8 @@
 'use client';
 import { use, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { adminApi } from '@/lib/api/admin';
+import { adminApi, type AdminStaffMember, type CreateAdminStaffData } from '@/lib/api/admin';
 import { PageHeader } from '@/components/ui/PageHeader';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -16,6 +16,7 @@ const TABS = [
   { key: 'tms', label: 'Task Mgmt' },
   { key: 'qr', label: 'QR Codes' },
   { key: 'services', label: 'Services' },
+  { key: 'staff', label: 'Staff' },
 ];
 
 export default function HotelConfigPage({ params }: { params: Promise<{ hotelId: string }> }) {
@@ -107,6 +108,7 @@ export default function HotelConfigPage({ params }: { params: Promise<{ hotelId:
       {tab === 'tms' && <TMSTab hotelId={hotelId} token={token!} />}
       {tab === 'qr' && <QRTab hotelId={hotelId} token={token!} />}
       {tab === 'services' && <ServicesTab hotelId={hotelId} token={token!} />}
+      {tab === 'staff' && <StaffTab hotelId={hotelId} token={token!} />}
     </div>
   );
 }
@@ -831,6 +833,254 @@ function ServicesTab({ hotelId, token }: { hotelId: string; token: string }) {
             )}
           </div>
         ))
+      )}
+    </div>
+  );
+}
+
+// ─── Staff ─────────────────────────────────────────────────────────────────
+
+const ROLES = ['LINE_STAFF', 'SUPERVISOR', 'HEAD_OF_DEPT', 'RECEPTIONIST', 'GENERAL_MANAGER'];
+const DEPARTMENTS = ['HOUSEKEEPING', 'MAINTENANCE', 'FOOD_AND_BEVERAGE', 'FRONT_OFFICE', 'SECURITY', 'MANAGEMENT'];
+
+const ROLE_COLOR: Record<string, string> = {
+  LINE_STAFF: '#64748B', SUPERVISOR: '#3B82F6', HEAD_OF_DEPT: '#8B5CF6',
+  RECEPTIONIST: '#10B981', GENERAL_MANAGER: '#F0A500',
+};
+
+const DEPT_SHORT: Record<string, string> = {
+  HOUSEKEEPING: 'HK', MAINTENANCE: 'MNT', FOOD_AND_BEVERAGE: 'F&B',
+  FRONT_OFFICE: 'FO', SECURITY: 'SEC', MANAGEMENT: 'MGT',
+};
+
+const EMPTY_STAFF: CreateAdminStaffData = {
+  email: '', firstName: '', lastName: '', phone: '',
+  role: 'LINE_STAFF', department: 'HOUSEKEEPING',
+  password: '', assignedFloor: '',
+};
+
+function StaffTab({ hotelId, token }: { hotelId: string; token: string }) {
+  const qc = useQueryClient();
+  const [showModal, setShowModal] = useState(false);
+  const [editTarget, setEditTarget] = useState<AdminStaffMember | null>(null);
+  const [form, setForm] = useState<CreateAdminStaffData>(EMPTY_STAFF);
+  const [pinModal, setPinModal] = useState<{ staffId: string; name: string } | null>(null);
+  const [newPin, setNewPin] = useState('');
+  const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('active');
+  const [filterDept, setFilterDept] = useState('');
+
+  const { data: staff = [], isLoading } = useQuery({
+    queryKey: ['admin-staff', hotelId],
+    queryFn: () => adminApi.listStaff(token, hotelId),
+    enabled: !!token,
+  });
+
+  const createMut = useMutation({
+    mutationFn: (data: CreateAdminStaffData) => adminApi.createStaff(token, hotelId, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-staff', hotelId] }); closeModal(); toast.success('Staff member created'); },
+    onError: () => toast.error('Failed to create staff member'),
+  });
+
+  const updateMut = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateAdminStaffData> }) =>
+      adminApi.updateStaff(token, hotelId, id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-staff', hotelId] }); closeModal(); toast.success('Staff member updated'); },
+    onError: () => toast.error('Failed to update staff member'),
+  });
+
+  const deactivateMut = useMutation({
+    mutationFn: (staffId: string) => adminApi.deactivateStaff(token, hotelId, staffId),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-staff', hotelId] }); toast.success('Staff member deactivated'); },
+    onError: () => toast.error('Failed to deactivate'),
+  });
+
+  const pinMut = useMutation({
+    mutationFn: ({ staffId, pin }: { staffId: string; pin: string }) =>
+      adminApi.resetStaffPin(token, hotelId, staffId, pin),
+    onSuccess: () => { setPinModal(null); setNewPin(''); toast.success('PIN updated'); },
+    onError: () => toast.error('Failed to update PIN'),
+  });
+
+  function openCreate() { setEditTarget(null); setForm(EMPTY_STAFF); setShowModal(true); }
+
+  function openEdit(s: AdminStaffMember) {
+    setEditTarget(s);
+    setForm({ email: s.email, firstName: s.firstName, lastName: s.lastName ?? '', phone: s.phone ?? '', role: s.role, department: s.department, password: '', assignedFloor: s.assignedFloor ?? '' });
+    setShowModal(true);
+  }
+
+  function closeModal() { setShowModal(false); setEditTarget(null); setForm(EMPTY_STAFF); }
+
+  function submit() {
+    if (editTarget) {
+      const { password, ...rest } = form;
+      const data: Partial<CreateAdminStaffData> = rest;
+      if (password) data.password = password;
+      updateMut.mutate({ id: editTarget.id, data });
+    } else {
+      createMut.mutate(form);
+    }
+  }
+
+  const filtered = staff.filter(s => {
+    if (filterActive === 'active' && !s.isActive) return false;
+    if (filterActive === 'inactive' && s.isActive) return false;
+    if (filterDept && s.department !== filterDept) return false;
+    return true;
+  });
+
+  const isOnShift = (s: AdminStaffMember) => s.shifts && s.shifts.some(sh => sh.isActive);
+  const isPending = createMut.isPending || updateMut.isPending;
+
+  if (isLoading) return <div className="card h-32 shimmer" />;
+
+  return (
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex rounded-lg overflow-hidden border text-xs font-600 font-display" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          {(['all', 'active', 'inactive'] as const).map(v => (
+            <button key={v} onClick={() => setFilterActive(v)}
+              className="px-3 py-1.5 capitalize transition-colors"
+              style={{ background: filterActive === v ? 'rgba(244,63,94,0.15)' : 'transparent', color: filterActive === v ? '#F43F5E' : '#64748B' }}>
+              {v}
+            </button>
+          ))}
+        </div>
+        <select value={filterDept} onChange={e => setFilterDept(e.target.value)} className="text-xs h-8 px-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: filterDept ? '#fff' : '#64748B' }}>
+          <option value="">All departments</option>
+          {DEPARTMENTS.map(d => <option key={d} value={d}>{d.replace(/_/g, ' ')}</option>)}
+        </select>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-xs text-ink-500">{filtered.length} member{filtered.length !== 1 ? 's' : ''}</span>
+          <button onClick={openCreate}
+            className="h-8 px-4 rounded-lg text-xs font-600 font-display transition-all"
+            style={{ background: 'linear-gradient(135deg, #F43F5E, #FF6B8A)', color: '#fff', boxShadow: '0 0 12px rgba(244,63,94,0.2)' }}>
+            + Add Staff
+          </button>
+        </div>
+      </div>
+
+      {/* Table */}
+      {filtered.length === 0 ? (
+        <div className="card flex items-center justify-center h-32 text-ink-500 text-sm">No staff members</div>
+      ) : (
+        <div className="card overflow-hidden">
+          <table className="data-table">
+            <thead>
+              <tr><th>Name</th><th>Role</th><th>Dept</th><th>Floor</th><th>Status</th><th>Shift</th><th></th></tr>
+            </thead>
+            <tbody>
+              {filtered.map(s => (
+                <tr key={s.id}>
+                  <td>
+                    <div className="flex flex-col">
+                      <span className="text-white font-600 text-sm">{s.firstName} {s.lastName ?? ''}</span>
+                      <span className="text-ink-500 text-xs">{s.email}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="text-xs font-600 px-2 py-0.5 rounded-full font-display"
+                      style={{ background: `${ROLE_COLOR[s.role]}18`, color: ROLE_COLOR[s.role] ?? '#94A3B8' }}>
+                      {s.role.replace(/_/g, ' ')}
+                    </span>
+                  </td>
+                  <td className="text-ink-300 text-xs font-600">{DEPT_SHORT[s.department] ?? s.department}</td>
+                  <td className="text-ink-400 text-xs">{s.assignedFloor ?? '—'}</td>
+                  <td>
+                    <span className="inline-flex items-center gap-1 text-xs">
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.isActive ? '#10B981' : '#475569' }} />
+                      <span style={{ color: s.isActive ? '#10B981' : '#475569' }}>{s.isActive ? 'Active' : 'Inactive'}</span>
+                    </span>
+                  </td>
+                  <td className="text-xs" style={{ color: isOnShift(s) ? '#F0A500' : '#475569' }}>
+                    {isOnShift(s) ? 'On Shift' : '—'}
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => openEdit(s)} className="text-ink-400 hover:text-white transition-colors text-xs">Edit</button>
+                      <button onClick={() => setPinModal({ staffId: s.id, name: `${s.firstName} ${s.lastName ?? ''}` })}
+                        className="text-ink-400 hover:text-gold transition-colors text-xs">PIN</button>
+                      {s.isActive && (
+                        <button onClick={() => { if (confirm(`Deactivate ${s.firstName}?`)) deactivateMut.mutate(s.id); }}
+                          className="text-ink-400 hover:text-rose transition-colors text-xs">Off</button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Create/Edit Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+          <div className="card w-full max-w-md p-6 space-y-4" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-display font-700 text-white">{editTarget ? 'Edit Staff Member' : 'Add Staff Member'}</h3>
+              <button onClick={closeModal} className="text-ink-500 hover:text-white text-lg">✕</button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="First Name" value={form.firstName} onChange={v => setForm(f => ({ ...f, firstName: v }))} required />
+              <Field label="Last Name" value={form.lastName ?? ''} onChange={v => setForm(f => ({ ...f, lastName: v }))} />
+            </div>
+            <div>
+              <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">Email</label>
+              <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required disabled={!!editTarget}
+                style={editTarget ? { opacity: 0.5, cursor: 'not-allowed' } : {}} />
+            </div>
+            <Field label="Phone" value={form.phone ?? ''} onChange={v => setForm(f => ({ ...f, phone: v }))} placeholder="+380501234567" />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">Role</label>
+                <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
+                  {ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">Department</label>
+                <select value={form.department} onChange={e => setForm(f => ({ ...f, department: e.target.value }))}>
+                  {DEPARTMENTS.map(d => <option key={d} value={d}>{d.replace(/_/g, ' ')}</option>)}
+                </select>
+              </div>
+            </div>
+            <Field label="Assigned Floor" value={form.assignedFloor ?? ''} onChange={v => setForm(f => ({ ...f, assignedFloor: v }))} placeholder="e.g. 3" />
+            <Field label={editTarget ? 'New Password (leave blank to keep)' : 'Password'} value={form.password} onChange={v => setForm(f => ({ ...f, password: v }))} required={!editTarget} />
+            <div className="flex gap-2 pt-2">
+              <button onClick={submit} disabled={isPending}
+                className="flex-1 h-10 rounded-lg text-sm font-600 font-display transition-all"
+                style={{ background: isPending ? 'rgba(244,63,94,0.4)' : 'linear-gradient(135deg, #F43F5E, #FF6B8A)', color: '#fff' }}>
+                {isPending ? 'Saving...' : editTarget ? 'Save Changes' : 'Create'}
+              </button>
+              <button onClick={closeModal} className="px-4 h-10 rounded-lg text-sm font-600 font-display"
+                style={{ background: 'rgba(255,255,255,0.06)', color: '#94A3B8' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PIN Reset Modal */}
+      {pinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+          <div className="card w-full max-w-xs p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display font-700 text-white">Reset PIN</h3>
+              <button onClick={() => { setPinModal(null); setNewPin(''); }} className="text-ink-500 hover:text-white text-lg">✕</button>
+            </div>
+            <p className="text-xs text-ink-400">{pinModal.name}</p>
+            <Field label="New PIN (4–8 digits)" value={newPin} onChange={setNewPin} placeholder="1234" />
+            <button onClick={() => pinMut.mutate({ staffId: pinModal.staffId, pin: newPin })}
+              disabled={pinMut.isPending || newPin.length < 4}
+              className="w-full h-10 rounded-lg text-sm font-600 font-display"
+              style={{ background: newPin.length >= 4 ? 'rgba(240,165,0,0.15)' : 'rgba(255,255,255,0.04)', color: newPin.length >= 4 ? '#F0A500' : '#475569', border: `1px solid ${newPin.length >= 4 ? 'rgba(240,165,0,0.3)' : 'rgba(255,255,255,0.06)'}` }}>
+              {pinMut.isPending ? 'Updating...' : 'Set PIN'}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

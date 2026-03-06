@@ -129,8 +129,17 @@ export const en = {
   qr: {
     title: 'QR Codes',
     subtitle: '{active} active codes · {scans} total scans',
+    generate: 'Generate QR',
+    generateTitle: 'Generate QR Code for Room',
+    generateBtn: 'Generate',
+    generating: 'Generating…',
+    generateError: 'Failed to generate QR code. Please try again.',
+    generateFirst: 'Generate your first QR code',
+    roomNumber: 'Room Number',
+    labelOptional: 'Label (optional)',
+    labelPlaceholder: 'e.g. Deluxe Room 305',
     downloadAll: 'Download All (ZIP)',
-    noQRCodes: 'No QR codes generated yet. Use the Admin panel to create them.',
+    noQRCodes: 'No QR codes yet.',
     inactive: 'Inactive',
     scans: 'scans',
     downloadPdf: '↓ PDF',
@@ -362,5 +371,6 @@ export const en = {
   common: {
     rm: 'Rm',
     loading: 'Loading...',
+    cancel: 'Cancel',
   },
 } as const;

@@ -55,6 +55,13 @@ export const dashboardApi = {
     return res.data.data;
   },
 
+  generateQR: async (hotelId: string, roomNumber: string, label: string | undefined, token: string): Promise<QRCode> => {
+    const res = await api.post(`/api/dashboard/hotels/${hotelId}/qr/generate`, { roomNumber, label }, {
+      headers: authHeader(token),
+    });
+    return res.data.data;
+  },
+
   getQRCodes: async (hotelId: string, token: string): Promise<QRCode[]> => {
     const res = await api.get(`/api/dashboard/hotels/${hotelId}/qr`, {
       headers: authHeader(token),
