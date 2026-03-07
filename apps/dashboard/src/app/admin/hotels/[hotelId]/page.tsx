@@ -2,7 +2,7 @@
 import { use, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { adminApi, type AdminStaffMember, type CreateAdminStaffData } from '@/lib/api/admin';
+import { adminApi, type AdminStaffMember, type CreateAdminStaffData, type AdminRoom, type BulkRoomInput, type AdminTask, type AdminTemplate, type TemplateInput } from '@/lib/api/admin';
 import { PageHeader } from '@/components/ui/PageHeader';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -17,6 +17,9 @@ const TABS = [
   { key: 'qr', label: 'QR Codes' },
   { key: 'services', label: 'Services' },
   { key: 'staff', label: 'Staff' },
+  { key: 'housekeeping', label: 'Housekeeping' },
+  { key: 'tasks', label: 'Tasks' },
+  { key: 'templates', label: 'Templates' },
 ];
 
 export default function HotelConfigPage({ params }: { params: Promise<{ hotelId: string }> }) {
@@ -109,6 +112,9 @@ export default function HotelConfigPage({ params }: { params: Promise<{ hotelId:
       {tab === 'qr' && <QRTab hotelId={hotelId} token={token!} />}
       {tab === 'services' && <ServicesTab hotelId={hotelId} token={token!} />}
       {tab === 'staff' && <StaffTab hotelId={hotelId} token={token!} />}
+      {tab === 'housekeeping' && <HousekeepingTab hotelId={hotelId} token={token!} />}
+      {tab === 'tasks' && <TasksTab hotelId={hotelId} token={token!} />}
+      {tab === 'templates' && <TemplatesTab hotelId={hotelId} token={token!} />}
     </div>
   );
 }
@@ -1079,6 +1085,423 @@ function StaffTab({ hotelId, token }: { hotelId: string; token: string }) {
               style={{ background: newPin.length >= 4 ? 'rgba(240,165,0,0.15)' : 'rgba(255,255,255,0.04)', color: newPin.length >= 4 ? '#F0A500' : '#475569', border: `1px solid ${newPin.length >= 4 ? 'rgba(240,165,0,0.3)' : 'rgba(255,255,255,0.06)'}` }}>
               {pinMut.isPending ? 'Updating...' : 'Set PIN'}
             </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Housekeeping ──────────────────────────────────────────────────────────
+
+const HK_STATUS_COLORS: Record<string, string> = {
+  DIRTY: '#F43F5E', CLEANING: '#F0A500', CLEANED: '#3B82F6',
+  INSPECTED: '#8B5CF6', READY: '#10B981', OOO: '#64748B', DND: '#94A3B8',
+};
+
+const HK_STATUSES = ['DIRTY', 'CLEANING', 'CLEANED', 'INSPECTED', 'READY', 'OOO', 'DND'];
+
+function HousekeepingTab({ hotelId, token }: { hotelId: string; token: string }) {
+  const qc = useQueryClient();
+  const [bulkInput, setBulkInput] = useState('');
+  const [showBulk, setShowBulk] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('');
+
+  const { data: rooms = [], isLoading } = useQuery({
+    queryKey: ['admin-rooms', hotelId],
+    queryFn: () => adminApi.listRooms(token, hotelId),
+    enabled: !!token,
+  });
+
+  const updateStatusMut = useMutation({
+    mutationFn: ({ roomId, status }: { roomId: string; status: string }) =>
+      adminApi.updateRoomStatus(token, hotelId, roomId, status),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-rooms', hotelId] }); toast.success('Status updated'); },
+    onError: () => toast.error('Failed to update status'),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (roomId: string) => adminApi.deleteRoom(token, hotelId, roomId),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-rooms', hotelId] }); toast.success('Room removed'); },
+    onError: () => toast.error('Failed to remove room'),
+  });
+
+  const bulkMut = useMutation({
+    mutationFn: (rooms: BulkRoomInput[]) => adminApi.bulkCreateRooms(token, hotelId, rooms),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['admin-rooms', hotelId] });
+      toast.success(`${data?.length ?? 0} rooms created/updated`);
+      setBulkInput('');
+      setShowBulk(false);
+    },
+    onError: () => toast.error('Failed to create rooms'),
+  });
+
+  function parseBulk() {
+    const lines = bulkInput.trim().split('\n').filter(Boolean);
+    const rooms: BulkRoomInput[] = [];
+    for (const line of lines) {
+      const [roomNumber, floor, roomType] = line.split(',').map(s => s.trim());
+      if (!roomNumber || !floor) { toast.error(`Invalid line: "${line}"`); return; }
+      rooms.push({ roomNumber, floor: Number(floor), roomType: roomType || undefined });
+    }
+    if (rooms.length === 0) { toast.error('No valid rooms'); return; }
+    bulkMut.mutate(rooms);
+  }
+
+  const filtered = filterStatus ? rooms.filter(r => r.housekeepingStatus === filterStatus) : rooms;
+  const byFloor = filtered.reduce<Record<number, AdminRoom[]>>((acc, r) => {
+    (acc[r.floor] = acc[r.floor] ?? []).push(r);
+    return acc;
+  }, {});
+
+  if (isLoading) return <div className="card h-32 shimmer" />;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 flex-wrap">
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+          className="text-xs h-8 px-2 rounded-lg"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: filterStatus ? '#fff' : '#64748B' }}>
+          <option value="">All statuses</option>
+          {HK_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <span className="text-xs text-ink-500">{filtered.length} rooms</span>
+        <div className="ml-auto">
+          <button onClick={() => setShowBulk(v => !v)}
+            className="h-8 px-4 rounded-lg text-xs font-600 font-display"
+            style={{ background: 'rgba(255,255,255,0.06)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.08)' }}>
+            + Bulk Add Rooms
+          </button>
+        </div>
+      </div>
+
+      {showBulk && (
+        <div className="card p-4 space-y-3">
+          <p className="text-xs text-ink-400">One room per line: <span className="text-ink-200 font-mono">roomNumber, floor, roomType</span> (roomType optional)</p>
+          <textarea value={bulkInput} onChange={e => setBulkInput(e.target.value)} rows={6}
+            placeholder={'101, 1, Standard\n102, 1, Deluxe\n201, 2'}
+            className="w-full text-sm font-mono"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', borderRadius: '8px', padding: '8px 12px', resize: 'vertical' }} />
+          <div className="flex gap-2">
+            <button onClick={parseBulk} disabled={bulkMut.isPending}
+              className="h-8 px-4 rounded-lg text-xs font-600 font-display"
+              style={{ background: 'linear-gradient(135deg, #F43F5E, #FF6B8A)', color: '#fff' }}>
+              {bulkMut.isPending ? 'Creating...' : 'Create Rooms'}
+            </button>
+            <button onClick={() => setShowBulk(false)} className="h-8 px-3 rounded-lg text-xs" style={{ color: '#64748B' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
+        <div className="card flex items-center justify-center h-32 text-ink-500 text-sm">No rooms found</div>
+      ) : (
+        Object.entries(byFloor).sort(([a], [b]) => Number(a) - Number(b)).map(([floor, floorRooms]) => (
+          <div key={floor}>
+            <p className="text-xs font-700 font-display text-ink-400 uppercase tracking-widest mb-2">Floor {floor}</p>
+            <div className="card overflow-hidden">
+              <table className="data-table">
+                <thead>
+                  <tr><th>Room</th><th>Type</th><th>HK Status</th><th>Occupancy</th><th>Cleaner</th><th>Rush</th><th></th></tr>
+                </thead>
+                <tbody>
+                  {floorRooms.map(r => (
+                    <tr key={r.id}>
+                      <td className="text-white font-600">{r.roomNumber}</td>
+                      <td className="text-ink-400 text-xs">{r.roomType ?? '—'}</td>
+                      <td>
+                        <select value={r.housekeepingStatus}
+                          onChange={e => updateStatusMut.mutate({ roomId: r.id, status: e.target.value })}
+                          className="text-xs h-7 px-2 rounded-lg"
+                          style={{ background: `${HK_STATUS_COLORS[r.housekeepingStatus] ?? '#64748B'}18`, color: HK_STATUS_COLORS[r.housekeepingStatus] ?? '#94A3B8', border: `1px solid ${HK_STATUS_COLORS[r.housekeepingStatus] ?? '#64748B'}33` }}>
+                          {HK_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </td>
+                      <td className="text-xs" style={{ color: r.occupancyStatus === 'OCCUPIED' ? '#F0A500' : '#64748B' }}>
+                        {r.occupancyStatus}
+                      </td>
+                      <td className="text-xs text-ink-400">
+                        {r.assignedCleaner ? `${r.assignedCleaner.firstName} ${r.assignedCleaner.lastName ?? ''}` : '—'}
+                      </td>
+                      <td>
+                        {r.isRush && <span className="text-xs font-600 px-1.5 py-0.5 rounded" style={{ background: 'rgba(244,63,94,0.15)', color: '#F43F5E' }}>Rush</span>}
+                      </td>
+                      <td>
+                        <button onClick={() => { if (confirm(`Remove room ${r.roomNumber}?`)) deleteMut.mutate(r.id); }}
+                          className="text-xs text-ink-500 hover:text-rose transition-colors">Remove</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+// ─── Tasks ─────────────────────────────────────────────────────────────────
+
+const TASK_STATUS_COLORS: Record<string, string> = {
+  NEW: '#64748B', ASSIGNED: '#3B82F6', ACCEPTED: '#6366F1', IN_PROGRESS: '#F0A500',
+  ON_HOLD: '#F59E0B', COMPLETED: '#10B981', INSPECTED: '#8B5CF6', CLOSED: '#475569',
+  CANCELLED: '#F43F5E', ESCALATED: '#EF4444',
+};
+
+const TASK_STATUSES = ['NEW', 'ASSIGNED', 'ACCEPTED', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'INSPECTED', 'CLOSED', 'CANCELLED', 'ESCALATED'];
+
+function TasksTab({ hotelId, token }: { hotelId: string; token: string }) {
+  const qc = useQueryClient();
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterType, setFilterType] = useState('');
+
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['admin-tasks', hotelId],
+    queryFn: () => adminApi.listTasks(token, hotelId),
+    enabled: !!token,
+    refetchInterval: 30000,
+  });
+
+  const updateMut = useMutation({
+    mutationFn: ({ taskType, taskId, status }: { taskType: string; taskId: string; status: string }) =>
+      adminApi.updateTaskStatus(token, hotelId, taskType, taskId, status),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tasks', hotelId] }); toast.success('Status updated'); },
+    onError: () => toast.error('Failed to update'),
+  });
+
+  const filtered = tasks.filter(t => {
+    if (filterStatus && t.status !== filterStatus) return false;
+    if (filterType && t.type !== filterType) return false;
+    return true;
+  });
+
+  if (isLoading) return <div className="card h-32 shimmer" />;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 flex-wrap">
+        <select value={filterType} onChange={e => setFilterType(e.target.value)}
+          className="text-xs h-8 px-2 rounded-lg"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: filterType ? '#fff' : '#64748B' }}>
+          <option value="">All types</option>
+          <option value="INTERNAL">Internal</option>
+          <option value="ORDER">Orders</option>
+          <option value="SERVICE_REQUEST">Service Requests</option>
+        </select>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+          className="text-xs h-8 px-2 rounded-lg"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: filterStatus ? '#fff' : '#64748B' }}>
+          <option value="">All statuses</option>
+          {TASK_STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
+        </select>
+        <span className="text-xs text-ink-500">{filtered.length} tasks</span>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="card flex items-center justify-center h-32 text-ink-500 text-sm">No tasks</div>
+      ) : (
+        <div className="card overflow-hidden">
+          <table className="data-table">
+            <thead>
+              <tr><th>Title</th><th>Type</th><th>Dept</th><th>Room</th><th>Assigned</th><th>Priority</th><th>Status</th><th>Created</th></tr>
+            </thead>
+            <tbody>
+              {filtered.map(t => (
+                <tr key={t.id}>
+                  <td className="text-white text-sm max-w-xs truncate">{t.title}</td>
+                  <td>
+                    <span className="text-xs font-600 px-1.5 py-0.5 rounded font-display"
+                      style={{ background: t.type === 'INTERNAL' ? 'rgba(99,102,241,0.15)' : t.type === 'ORDER' ? 'rgba(240,165,0,0.15)' : 'rgba(16,185,129,0.15)', color: t.type === 'INTERNAL' ? '#6366F1' : t.type === 'ORDER' ? '#F0A500' : '#10B981' }}>
+                      {t.type === 'SERVICE_REQUEST' ? 'SR' : t.type}
+                    </span>
+                  </td>
+                  <td className="text-ink-400 text-xs">{t.department ?? '—'}</td>
+                  <td className="text-ink-400 text-xs">{t.roomNumber ?? '—'}</td>
+                  <td className="text-ink-400 text-xs">
+                    {t.assignedTo ? `${t.assignedTo.firstName} ${t.assignedTo.lastName ?? ''}` : '—'}
+                  </td>
+                  <td>
+                    <span className="text-xs font-600" style={{ color: t.priority === 'URGENT' ? '#F43F5E' : t.priority === 'HIGH' ? '#F0A500' : '#64748B' }}>
+                      {t.priority}
+                    </span>
+                  </td>
+                  <td>
+                    <select value={t.status}
+                      onChange={e => updateMut.mutate({ taskType: t.type, taskId: t.id, status: e.target.value })}
+                      className="text-xs h-7 px-2 rounded-lg"
+                      style={{ background: `${TASK_STATUS_COLORS[t.status] ?? '#64748B'}18`, color: TASK_STATUS_COLORS[t.status] ?? '#94A3B8', border: `1px solid ${TASK_STATUS_COLORS[t.status] ?? '#64748B'}33` }}>
+                      {TASK_STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </td>
+                  <td className="text-ink-500 text-xs">{new Date(t.createdAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Templates ─────────────────────────────────────────────────────────────
+
+const TEMPLATE_DEPTS = ['HOUSEKEEPING', 'MAINTENANCE', 'FOOD_AND_BEVERAGE', 'FRONT_OFFICE', 'SECURITY', 'MANAGEMENT'];
+const TEMPLATE_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+
+const EMPTY_TEMPLATE: TemplateInput = {
+  name: '', department: 'HOUSEKEEPING', defaultPriority: 'MEDIUM',
+  estimatedMinutes: undefined, checklistItems: [],
+};
+
+function TemplatesTab({ hotelId, token }: { hotelId: string; token: string }) {
+  const qc = useQueryClient();
+  const [showModal, setShowModal] = useState(false);
+  const [editTarget, setEditTarget] = useState<AdminTemplate | null>(null);
+  const [form, setForm] = useState<TemplateInput>(EMPTY_TEMPLATE);
+  const [checklistText, setChecklistText] = useState('');
+
+  const { data: templates = [], isLoading } = useQuery({
+    queryKey: ['admin-templates', hotelId],
+    queryFn: () => adminApi.listTemplates(token, hotelId),
+    enabled: !!token,
+  });
+
+  const createMut = useMutation({
+    mutationFn: (data: TemplateInput) => adminApi.createTemplate(token, hotelId, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-templates', hotelId] }); closeModal(); toast.success('Template created'); },
+    onError: () => toast.error('Failed to create template'),
+  });
+
+  const updateMut = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<TemplateInput> }) =>
+      adminApi.updateTemplate(token, hotelId, id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-templates', hotelId] }); closeModal(); toast.success('Template updated'); },
+    onError: () => toast.error('Failed to update template'),
+  });
+
+  const deactivateMut = useMutation({
+    mutationFn: (id: string) => adminApi.deactivateTemplate(token, hotelId, id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-templates', hotelId] }); toast.success('Template deactivated'); },
+    onError: () => toast.error('Failed to deactivate'),
+  });
+
+  function openCreate() { setEditTarget(null); setForm(EMPTY_TEMPLATE); setChecklistText(''); setShowModal(true); }
+  function openEdit(t: AdminTemplate) {
+    setEditTarget(t);
+    setForm({ name: t.name, department: t.department, defaultPriority: t.defaultPriority, estimatedMinutes: t.estimatedMinutes ?? undefined, checklistItems: t.checklistItems });
+    setChecklistText(t.checklistItems.map(c => c.text).join('\n'));
+    setShowModal(true);
+  }
+  function closeModal() { setShowModal(false); setEditTarget(null); setForm(EMPTY_TEMPLATE); setChecklistText(''); }
+
+  function submit() {
+    const items = checklistText.split('\n').map((text, i) => ({ text: text.trim(), order: i })).filter(c => c.text);
+    const data = { ...form, checklistItems: items };
+    if (editTarget) updateMut.mutate({ id: editTarget.id, data });
+    else createMut.mutate(data);
+  }
+
+  const isPending = createMut.isPending || updateMut.isPending;
+  if (isLoading) return <div className="card h-32 shimmer" />;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-ink-500">{templates.filter(t => t.isActive).length} active templates</span>
+        <button onClick={openCreate}
+          className="h-8 px-4 rounded-lg text-xs font-600 font-display"
+          style={{ background: 'linear-gradient(135deg, #F43F5E, #FF6B8A)', color: '#fff', boxShadow: '0 0 12px rgba(244,63,94,0.2)' }}>
+          + New Template
+        </button>
+      </div>
+
+      {templates.length === 0 ? (
+        <div className="card flex items-center justify-center h-32 text-ink-500 text-sm">No templates</div>
+      ) : (
+        <div className="card overflow-hidden">
+          <table className="data-table">
+            <thead>
+              <tr><th>Name</th><th>Dept</th><th>Priority</th><th>Est. Time</th><th>Checklist</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              {templates.map(t => (
+                <tr key={t.id}>
+                  <td className="text-white font-600 text-sm">{t.name}</td>
+                  <td className="text-ink-400 text-xs">{t.department.replace(/_/g, ' ')}</td>
+                  <td>
+                    <span className="text-xs font-600" style={{ color: t.defaultPriority === 'URGENT' ? '#F43F5E' : t.defaultPriority === 'HIGH' ? '#F0A500' : '#64748B' }}>
+                      {t.defaultPriority}
+                    </span>
+                  </td>
+                  <td className="text-ink-400 text-xs">{t.estimatedMinutes ? `${t.estimatedMinutes} min` : '—'}</td>
+                  <td className="text-ink-500 text-xs">{t.checklistItems.length} items</td>
+                  <td>
+                    <span className="inline-flex items-center gap-1 text-xs">
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: t.isActive ? '#10B981' : '#475569' }} />
+                      <span style={{ color: t.isActive ? '#10B981' : '#475569' }}>{t.isActive ? 'Active' : 'Inactive'}</span>
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => openEdit(t)} className="text-ink-400 hover:text-white text-xs transition-colors">Edit</button>
+                      {t.isActive && (
+                        <button onClick={() => { if (confirm(`Deactivate "${t.name}"?`)) deactivateMut.mutate(t.id); }}
+                          className="text-ink-400 hover:text-rose text-xs transition-colors">Off</button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+          <div className="card w-full max-w-md p-6 space-y-4" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-display font-700 text-white">{editTarget ? 'Edit Template' : 'New Template'}</h3>
+              <button onClick={closeModal} className="text-ink-500 hover:text-white text-lg">✕</button>
+            </div>
+            <Field label="Name" value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} required />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">Department</label>
+                <select value={form.department} onChange={e => setForm(f => ({ ...f, department: e.target.value }))}>
+                  {TEMPLATE_DEPTS.map(d => <option key={d} value={d}>{d.replace(/_/g, ' ')}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">Priority</label>
+                <select value={form.defaultPriority ?? 'MEDIUM'} onChange={e => setForm(f => ({ ...f, defaultPriority: e.target.value }))}>
+                  {TEMPLATE_PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+            </div>
+            <Field label="Estimated Minutes" value={form.estimatedMinutes?.toString() ?? ''} onChange={v => setForm(f => ({ ...f, estimatedMinutes: v ? Number(v) : undefined }))} placeholder="30" />
+            <div>
+              <label className="block text-xs font-600 uppercase tracking-widest text-ink-300 mb-2 font-display">Checklist Items (one per line)</label>
+              <textarea value={checklistText} onChange={e => setChecklistText(e.target.value)} rows={5}
+                placeholder={'Check bathroom\nReplace towels\nVacuum floor'}
+                className="w-full text-sm"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', borderRadius: '8px', padding: '8px 12px', resize: 'vertical' }} />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button onClick={submit} disabled={isPending}
+                className="flex-1 h-10 rounded-lg text-sm font-600 font-display"
+                style={{ background: isPending ? 'rgba(244,63,94,0.4)' : 'linear-gradient(135deg, #F43F5E, #FF6B8A)', color: '#fff' }}>
+                {isPending ? 'Saving...' : editTarget ? 'Save Changes' : 'Create'}
+              </button>
+              <button onClick={closeModal} className="px-4 h-10 rounded-lg text-sm font-600 font-display"
+                style={{ background: 'rgba(255,255,255,0.06)', color: '#94A3B8' }}>
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

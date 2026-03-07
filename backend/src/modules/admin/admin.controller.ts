@@ -14,10 +14,12 @@ import {
 } from './admin.service';
 import { qrService } from '../qr/qrService';
 import { env } from '../../config/environment';
-import { listStaffMembers, createStaffMember } from '../staff/staff.service';
+import { listStaffMembers, createStaffMember, getUnifiedTasks, updateTaskStatus, listTemplatesForDashboard, createTemplateWithItems, updateTemplateWithItems, deactivateTemplate, getTMSStats } from '../staff/staff.service';
+import { roomService } from '../housekeeping/room.service';
 import { prisma } from '../../config/database';
 import bcrypt from 'bcryptjs';
 import { AppError } from '../../shared/middleware/errorHandler';
+import { HousekeepingStatus } from '@prisma/client';
 
 const upload = multer({ dest: path.join(process.cwd(), env.uploadsDir, 'logos') });
 
@@ -417,6 +419,107 @@ export const adminController = {
     try {
       const cfg = await adminTmsService.updateMapping(req.params.hotelId as string, req.body.mapping);
       res.json({ success: true, data: cfg });
+    } catch (err) { next(err); }
+  },
+
+  // ── Housekeeping ─────────────────────────────────────────────────────────────
+  async listRooms(req: Request, res: Response, next: NextFunction) {
+    try {
+      const hotelId = req.params.hotelId as string;
+      const rooms = await roomService.listRooms(hotelId);
+      res.json({ success: true, data: rooms });
+    } catch (err) { next(err); }
+  },
+
+  async bulkCreateRooms(req: Request, res: Response, next: NextFunction) {
+    try {
+      const hotelId = req.params.hotelId as string;
+      const { rooms } = req.body;
+      if (!Array.isArray(rooms) || rooms.length === 0) throw new AppError(400, 'rooms array required');
+      const created = await roomService.bulkCreate(hotelId, rooms);
+      res.json({ success: true, data: created, created: created.length });
+    } catch (err) { next(err); }
+  },
+
+  async updateRoomStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { hotelId, roomId } = req.params as { hotelId: string; roomId: string };
+      const { status, notes } = req.body;
+      if (!status) throw new AppError(400, 'status required');
+      const room = await roomService.getRoomDetail(hotelId, roomId);
+      if (!room) throw new AppError(404, 'Room not found');
+      const updated = await roomService.updateHousekeepingStatus(roomId, status as HousekeepingStatus, { source: 'DASHBOARD', notes });
+      res.json({ success: true, data: updated });
+    } catch (err) { next(err); }
+  },
+
+  async deleteRoom(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { hotelId, roomId } = req.params as { hotelId: string; roomId: string };
+      const room = await roomService.getRoomDetail(hotelId, roomId);
+      if (!room) throw new AppError(404, 'Room not found');
+      await prisma.room.update({ where: { id: roomId }, data: { isActive: false } });
+      res.json({ success: true, message: 'Room removed' });
+    } catch (err) { next(err); }
+  },
+
+  // ── Tasks ────────────────────────────────────────────────────────────────────
+  async listTasks(req: Request, res: Response, next: NextFunction) {
+    try {
+      const hotelId = req.params.hotelId as string;
+      const tasks = await getUnifiedTasks(hotelId, { role: 'GENERAL_MANAGER', department: 'MANAGEMENT' });
+      res.json({ success: true, data: tasks });
+    } catch (err) { next(err); }
+  },
+
+  async updateAdminTaskStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { taskType, taskId } = req.params as { taskType: string; taskId: string };
+      const { status } = req.body;
+      if (!status) throw new AppError(400, 'status required');
+      const upperType = taskType.toUpperCase() as 'INTERNAL' | 'ORDER' | 'SERVICE_REQUEST';
+      await updateTaskStatus(upperType, taskId, status, '');
+      res.json({ success: true, message: 'Status updated' });
+    } catch (err) { next(err); }
+  },
+
+  // ── Task Templates ────────────────────────────────────────────────────────────
+  async listTemplates(req: Request, res: Response, next: NextFunction) {
+    try {
+      const templates = await listTemplatesForDashboard(req.params.hotelId as string);
+      res.json({ success: true, data: templates });
+    } catch (err) { next(err); }
+  },
+
+  async createTemplate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const hotelId = req.params.hotelId as string;
+      const template = await createTemplateWithItems({ hotelId, ...req.body });
+      res.status(201).json({ success: true, data: template });
+    } catch (err) { next(err); }
+  },
+
+  async updateTemplate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { hotelId, templateId } = req.params as { hotelId: string; templateId: string };
+      const template = await updateTemplateWithItems(templateId, hotelId, req.body);
+      res.json({ success: true, data: template });
+    } catch (err) { next(err); }
+  },
+
+  async deactivateTemplate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { hotelId, templateId } = req.params as { hotelId: string; templateId: string };
+      await deactivateTemplate(templateId, hotelId);
+      res.json({ success: true, message: 'Template deactivated' });
+    } catch (err) { next(err); }
+  },
+
+  // ── TMS Stats ─────────────────────────────────────────────────────────────────
+  async getTmsStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      const stats = await getTMSStats(req.params.hotelId as string);
+      res.json({ success: true, data: stats });
     } catch (err) { next(err); }
   },
 };

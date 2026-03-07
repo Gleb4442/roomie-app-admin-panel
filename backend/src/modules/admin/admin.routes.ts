@@ -77,6 +77,25 @@ router.patch('/hotels/:hotelId/staff/:staffId', adminController.updateStaff);
 router.delete('/hotels/:hotelId/staff/:staffId', adminController.deactivateStaff);
 router.post('/hotels/:hotelId/staff/:staffId/reset-pin', adminController.resetStaffPin);
 
+// ── Housekeeping ──────────────────────────────────────────────────────────────
+router.get('/hotels/:hotelId/rooms', adminController.listRooms);
+router.post('/hotels/:hotelId/rooms/bulk', adminController.bulkCreateRooms);
+router.patch('/hotels/:hotelId/rooms/:roomId/status', adminController.updateRoomStatus);
+router.delete('/hotels/:hotelId/rooms/:roomId', adminController.deleteRoom);
+
+// ── Tasks ─────────────────────────────────────────────────────────────────────
+router.get('/hotels/:hotelId/tasks', adminController.listTasks);
+router.patch('/hotels/:hotelId/tasks/:taskType/:taskId/status', adminController.updateAdminTaskStatus);
+
+// ── Task Templates ────────────────────────────────────────────────────────────
+router.get('/hotels/:hotelId/templates', adminController.listTemplates);
+router.post('/hotels/:hotelId/templates', adminController.createTemplate);
+router.patch('/hotels/:hotelId/templates/:templateId', adminController.updateTemplate);
+router.delete('/hotels/:hotelId/templates/:templateId', adminController.deactivateTemplate);
+
+// ── TMS Stats ─────────────────────────────────────────────────────────────────
+router.get('/hotels/:hotelId/tms/stats', adminController.getTmsStats);
+
 // ── Monitoring ────────────────────────────────────────────────────────────────
 router.get('/monitoring/overview', adminController.monitoringOverview);
 router.get('/monitoring/sms-errors', adminController.monitoringSmsErrors);

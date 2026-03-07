@@ -240,7 +240,109 @@ export const adminApi = {
   resetStaffPin: async (token: string, hotelId: string, staffId: string, pin: string) => {
     await api.post(`/api/admin/hotels/${hotelId}/staff/${staffId}/reset-pin`, { pin }, { headers: authHeader(token) });
   },
+
+  // Housekeeping
+  listRooms: async (token: string, hotelId: string): Promise<AdminRoom[]> => {
+    const res = await api.get(`/api/admin/hotels/${hotelId}/rooms`, { headers: authHeader(token) });
+    return res.data.data;
+  },
+  bulkCreateRooms: async (token: string, hotelId: string, rooms: BulkRoomInput[]) => {
+    const res = await api.post(`/api/admin/hotels/${hotelId}/rooms/bulk`, { rooms }, { headers: authHeader(token) });
+    return res.data.data;
+  },
+  updateRoomStatus: async (token: string, hotelId: string, roomId: string, status: string, notes?: string) => {
+    const res = await api.patch(`/api/admin/hotels/${hotelId}/rooms/${roomId}/status`, { status, notes }, { headers: authHeader(token) });
+    return res.data.data;
+  },
+  deleteRoom: async (token: string, hotelId: string, roomId: string) => {
+    await api.delete(`/api/admin/hotels/${hotelId}/rooms/${roomId}`, { headers: authHeader(token) });
+  },
+
+  // Tasks
+  listTasks: async (token: string, hotelId: string): Promise<AdminTask[]> => {
+    const res = await api.get(`/api/admin/hotels/${hotelId}/tasks`, { headers: authHeader(token) });
+    return res.data.data;
+  },
+  updateTaskStatus: async (token: string, hotelId: string, taskType: string, taskId: string, status: string) => {
+    await api.patch(`/api/admin/hotels/${hotelId}/tasks/${taskType}/${taskId}/status`, { status }, { headers: authHeader(token) });
+  },
+
+  // Templates
+  listTemplates: async (token: string, hotelId: string): Promise<AdminTemplate[]> => {
+    const res = await api.get(`/api/admin/hotels/${hotelId}/templates`, { headers: authHeader(token) });
+    return res.data.data;
+  },
+  createTemplate: async (token: string, hotelId: string, data: TemplateInput) => {
+    const res = await api.post(`/api/admin/hotels/${hotelId}/templates`, data, { headers: authHeader(token) });
+    return res.data.data;
+  },
+  updateTemplate: async (token: string, hotelId: string, templateId: string, data: Partial<TemplateInput>) => {
+    const res = await api.patch(`/api/admin/hotels/${hotelId}/templates/${templateId}`, data, { headers: authHeader(token) });
+    return res.data.data;
+  },
+  deactivateTemplate: async (token: string, hotelId: string, templateId: string) => {
+    await api.delete(`/api/admin/hotels/${hotelId}/templates/${templateId}`, { headers: authHeader(token) });
+  },
+
+  // TMS Stats
+  getTmsStats: async (token: string, hotelId: string) => {
+    const res = await api.get(`/api/admin/hotels/${hotelId}/tms/stats`, { headers: authHeader(token) });
+    return res.data.data;
+  },
 };
+
+export interface AdminRoom {
+  id: string;
+  hotelId: string;
+  roomNumber: string;
+  floor: number;
+  roomType: string | null;
+  housekeepingStatus: string;
+  occupancyStatus: string;
+  isRush: boolean;
+  dndActive: boolean;
+  isActive: boolean;
+  assignedCleaner: { id: string; firstName: string; lastName: string | null } | null;
+  assignedInspector: { id: string; firstName: string; lastName: string | null } | null;
+}
+
+export interface BulkRoomInput {
+  roomNumber: string;
+  floor: number;
+  roomType?: string;
+  maxOccupancy?: number;
+}
+
+export interface AdminTask {
+  id: string;
+  type: 'INTERNAL' | 'ORDER' | 'SERVICE_REQUEST';
+  title: string;
+  status: string;
+  priority: string;
+  department: string | null;
+  roomNumber: string | null;
+  assignedTo: { firstName: string; lastName: string | null } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminTemplate {
+  id: string;
+  name: string;
+  department: string;
+  defaultPriority: string;
+  estimatedMinutes: number | null;
+  isActive: boolean;
+  checklistItems: { id: string; text: string; order: number }[];
+}
+
+export interface TemplateInput {
+  name: string;
+  department: string;
+  defaultPriority?: string;
+  estimatedMinutes?: number;
+  checklistItems?: { text: string; order: number }[];
+}
 
 export interface AdminStaffMember {
   id: string;
