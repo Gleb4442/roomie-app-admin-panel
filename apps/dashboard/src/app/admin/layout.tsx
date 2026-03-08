@@ -87,11 +87,14 @@ function AdminSidebar() {
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAdminAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
-    if (!isAuthenticated) router.replace('/admin/login');
-  }, [isAuthenticated, router]);
+    if (!isAuthenticated && !isLoginPage) router.replace('/admin/login');
+  }, [isAuthenticated, isLoginPage, router]);
 
+  if (isLoginPage) return <>{children}</>;
   if (!isAuthenticated) return null;
 
   return (

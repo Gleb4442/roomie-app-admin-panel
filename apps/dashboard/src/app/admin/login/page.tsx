@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminApi } from '@/lib/api/admin';
-import { AdminAuthProvider, useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useI18n } from '@/lib/i18n';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import toast from 'react-hot-toast';
@@ -25,7 +25,7 @@ function AdminLoginForm() {
     setLoading(true);
     try {
       const data = await adminApi.login(username, password);
-      login(data.token, data.username);
+      login(data.token, data.username ?? username);
       toast.success(t('adminLogin.welcomeBack'));
       router.push('/admin');
     } catch (err: unknown) {
@@ -126,9 +126,5 @@ function AdminLoginForm() {
 }
 
 export default function AdminLoginPage() {
-  return (
-    <AdminAuthProvider>
-      <AdminLoginForm />
-    </AdminAuthProvider>
-  );
+  return <AdminLoginForm />;
 }
